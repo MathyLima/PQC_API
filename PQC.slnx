@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="PQC.API/PQC.API.csproj" />
+  <Project Path="PQC.COMMUNICATION/PQC.COMMUNICATION.csproj" />
+  <Project Path="PQC.EXCEPTIONS/PQC.EXCEPTIONS.csproj" />
+  <Project Path="PQC.MODULES/PQC.MODULES.csproj" />
+</Solution>

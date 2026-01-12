@@ -1,0 +1,6 @@
+@PQC.API_HostAddress = http://localhost:5124
+
+GET {{PQC.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

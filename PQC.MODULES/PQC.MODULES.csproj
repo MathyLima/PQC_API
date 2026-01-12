@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Algorithm\Application\Mappers\" />
+    <Folder Include="Algorithm\Application\Services\" />
+    <Folder Include="Algorithm\Domain\Entities\" />
+    <Folder Include="Algorithm\Domain\Interfaces\" />
+    <Folder Include="Algorithm\Infraestructure\Data\" />
+    <Folder Include="Algorithm\Infraestructure\Repositories\" />
+    <Folder Include="Audit\Application\Mappers\" />
+    <Folder Include="Audit\Application\Services\" />
+    <Folder Include="Audit\Domain\Entities\" />
+    <Folder Include="Audit\Domain\Interfaces\" />
+    <Folder Include="Audit\Infraestructure\Data\" />
+    <Folder Include="Audit\Infraestructure\Repositories\" />
+    <Folder Include="Auth\Application\Mappers\" />
+    <Folder Include="Auth\Domain\Entities\" />
+    <Folder Include="Auth\Domain\Interfaces\" />
+    <Folder Include="Auth\Infraestructure\Data\" />
+    <Folder Include="Auth\Infraestructure\Repositories\" />
+    <Folder Include="Documents\Application\Mappers\" />
+    <Folder Include="Documents\Domain\Entities\" />
+    <Folder Include="Documents\Domain\Interfaces\" />
+    <Folder Include="Documents\Infraestructure\Data\" />
+    <Folder Include="Documents\Infraestructure\Repositories\" />
+    <Folder Include="Users\Infraestructure\Data\" />
+    <Folder Include="Users\Infraestructure\Repositories\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PQC.COMMUNICATION\PQC.COMMUNICATION.csproj" />
+    <ProjectReference Include="..\PQC.EXCEPTIONS\PQC.EXCEPTIONS.csproj" />
+  </ItemGroup>
+
+</Project>

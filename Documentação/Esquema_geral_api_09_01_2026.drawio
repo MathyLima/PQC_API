@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0" version="29.3.0">
+  <diagram name="Página-1" id="Fw1mTZURor4BYg2ZcMuJ">
+    <mxGraphModel dx="2399" dy="998" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SWft7glwEoVHGhvIvWKO-49" edge="1" parent="1" source="SWft7glwEoVHGhvIvWKO-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="SWft7glwEoVHGhvIvWKO-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-28" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="PQC.MODULES" vertex="1">
+          <mxGeometry height="419" width="1290" x="-270" y="417" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-31" parent="SWft7glwEoVHGhvIvWKO-28" style="swimlane;startSize=20;horizontal=1;childLayout=treeLayout;horizontalTree=0;sortEdges=1;resizable=0;containerType=tree;fontSize=12;" value="Auth/Users" vertex="1">
+          <mxGeometry height="190" width="280" x="20" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-37" parent="SWft7glwEoVHGhvIvWKO-28" style="swimlane;startSize=20;horizontal=1;childLayout=treeLayout;horizontalTree=0;sortEdges=1;resizable=0;containerType=tree;fontSize=12;" value="Documents" vertex="1">
+          <mxGeometry height="190" width="280" x="350" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-50" edge="1" parent="SWft7glwEoVHGhvIvWKO-28" source="SWft7glwEoVHGhvIvWKO-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="SWft7glwEoVHGhvIvWKO-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-52" edge="1" parent="SWft7glwEoVHGhvIvWKO-28" source="SWft7glwEoVHGhvIvWKO-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="SWft7glwEoVHGhvIvWKO-37">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-78" edge="1" parent="SWft7glwEoVHGhvIvWKO-28" source="SWft7glwEoVHGhvIvWKO-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="SWft7glwEoVHGhvIvWKO-55">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-32" parent="SWft7glwEoVHGhvIvWKO-28" style="whiteSpace=wrap;html=1;" value="Middleware" vertex="1">
+          <mxGeometry height="40" width="100" x="580" y="43" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-55" parent="SWft7glwEoVHGhvIvWKO-28" style="swimlane;startSize=20;horizontal=1;childLayout=treeLayout;horizontalTree=0;sortEdges=1;resizable=0;containerType=tree;fontSize=12;" value="PQC.ALG" vertex="1">
+          <mxGeometry height="190" width="280" x="670" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-59" parent="SWft7glwEoVHGhvIvWKO-28" style="swimlane;startSize=20;horizontal=1;childLayout=treeLayout;horizontalTree=0;sortEdges=1;resizable=0;containerType=tree;fontSize=12;" value="PQC.AUDITORIA" vertex="1">
+          <mxGeometry height="190" width="280" x="990" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-76" edge="1" parent="SWft7glwEoVHGhvIvWKO-28" source="SWft7glwEoVHGhvIvWKO-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.446;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="SWft7glwEoVHGhvIvWKO-59">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-30" edge="1" parent="1" source="SWft7glwEoVHGhvIvWKO-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="SWft7glwEoVHGhvIvWKO-28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-14" parent="1" style="swimlane;startSize=20;horizontal=1;childLayout=treeLayout;horizontalTree=0;sortEdges=1;resizable=0;containerType=tree;fontSize=12;" value="PQC.API" vertex="1">
+          <mxGeometry height="190" width="140" x="290" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-15" parent="SWft7glwEoVHGhvIvWKO-14" style="whiteSpace=wrap;html=1;" value="API Gateway" vertex="1">
+          <mxGeometry height="40" width="100" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="SWft7glwEoVHGhvIvWKO-48" parent="1" style="shape=datastore;whiteSpace=wrap;html=1;" value="DataBase" vertex="1">
+          <mxGeometry height="60" width="60" x="330" y="1000" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
