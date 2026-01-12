@@ -18,7 +18,7 @@ namespace PQC.API.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost("login")]
+        [HttpPost]
         [ProducesResponseType(typeof(LoginResponseJson), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult Login([FromBody] LoginRequestJson request)
