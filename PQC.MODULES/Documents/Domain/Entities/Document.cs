@@ -1,4 +1,4 @@
-﻿namespace PQC.MODULES.Auth.Domain.Entities
+﻿namespace PQC.MODULES.Documents.Domain.Entities
 {
     public class Document
     {
