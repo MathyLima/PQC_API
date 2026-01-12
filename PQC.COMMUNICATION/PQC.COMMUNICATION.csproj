@@ -7,12 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Requests\Documents\" />
     <Folder Include="Requests\Algorithm\" />
     <Folder Include="Requests\Audit\" />
     <Folder Include="Responses\Algorithm\" />
     <Folder Include="Responses\Auth\" />
-    <Folder Include="Responses\Documents\" />
   </ItemGroup>
 
 </Project>

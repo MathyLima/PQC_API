@@ -14,27 +14,27 @@ namespace PQC.MODULES.Documents.Validators
 
             if (file == null || file.Length == 0)
             {
-                errors.Add("File is required");
+                errors.Add("O arquivo é obrigatório.");
                 return errors;
             }
 
             // Valida tamanho
             if (file.Length > MaxFileSizeInBytes)
             {
-                errors.Add($"File size must be less than {MaxFileSizeInBytes / 1024 / 1024}MB");
+                errors.Add($"O arquivo deve ter tamanho menor que {MaxFileSizeInBytes / 1024 / 1024}MB.");
             }
 
             // Valida extensão
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(extension))
             {
-                errors.Add($"Only PDF files are allowed. Received: {extension}");
+                errors.Add($"Apenas arquivos PDF são permitidos. Extensão recebida: {extension}");
             }
 
             // Valida content type
             if (!AllowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
             {
-                errors.Add($"Invalid content type. Expected: application/pdf, Received: {file.ContentType}");
+                errors.Add($"Tipo de arquivo inválido. Esperado: application/pdf. Recebido: {file.ContentType}");
             }
 
             return errors;

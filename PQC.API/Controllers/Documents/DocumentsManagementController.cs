@@ -1,11 +1,13 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PQC.COMMUNICATION.Requests.Documents;
+using PQC.COMMUNICATION.Responses;
 using PQC.COMMUNICATION.Responses.Documents;
 using PQC.MODULES.Documents.Application.Services.UseCases.Delete;
 using PQC.MODULES.Documents.Application.Services.UseCases.GetById;
 using PQC.MODULES.Documents.Application.Services.UseCases.List;
 using PQC.MODULES.Documents.Application.Services.UseCases.Upload;
+using System.Security.Claims;
 
 namespace PQC.API.Controllers
 {
@@ -15,10 +17,11 @@ namespace PQC.API.Controllers
     public class DocumentsController : ControllerBase
     {
         [HttpPost]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(DocumentResponseJson), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Upload([FromForm] IFormFile file)
+        [ProducesResponseType(typeof(ResponseErrorMessagesJson), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Upload([FromForm] IFormDTO request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
@@ -28,14 +31,14 @@ namespace PQC.API.Controllers
 
             var userId = Guid.Parse(userIdClaim);
             var useCase = new UploadDocumentUseCase();
-            var response = await useCase.Execute(file, userId);
+            var response = await useCase.Execute(request.File, userId);
 
             return Created(string.Empty, response);
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(DocumentListResponseJson), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status401Unauthorized)]
         public IActionResult List()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -53,9 +56,9 @@ namespace PQC.API.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(DocumentResponseJson),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status401Unauthorized)]
         public IActionResult Download([FromRoute]Guid id)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

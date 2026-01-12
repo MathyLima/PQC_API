@@ -25,7 +25,6 @@
     <Folder Include="Auth\Infraestructure\Data\" />
     <Folder Include="Auth\Infraestructure\Repositories\" />
     <Folder Include="Documents\Application\Mappers\" />
-    <Folder Include="Documents\Domain\Entities\" />
     <Folder Include="Documents\Domain\Interfaces\" />
     <Folder Include="Documents\Infraestructure\Data\" />
     <Folder Include="Documents\Infraestructure\Repositories\" />
@@ -36,6 +35,7 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
