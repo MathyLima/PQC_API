@@ -7,6 +7,7 @@
         public string? ContentType { get; set; }
         public long SizeInBytes { get; set; }
         public byte[]? Content { get; set; }
+        public byte[]? Signature { get; set; }
         public Guid UploadedByUserId { get; set; }
         public DateTime UploadedAt { get; set; }
         public bool IsActive { get; set; }
