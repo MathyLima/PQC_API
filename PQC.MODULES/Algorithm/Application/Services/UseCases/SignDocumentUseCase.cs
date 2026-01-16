@@ -24,7 +24,7 @@ namespace PQC.MODULES.Algorithm.Application.Services.UseCases
             }
 
             // Executa o algoritmo de assinatura
-            var result = await _algorithmExecutor.SignDocumentAsync(document.Content, privateKeyPath);
+            var result = await _algorithmExecutor.SignDocumentAsync(document.Content);
 
             if (!result.Success)
             {

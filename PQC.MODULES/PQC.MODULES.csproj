@@ -8,9 +8,8 @@
 
   <ItemGroup>
     <Folder Include="Algorithm\Application\Mappers\" />
-    <Folder Include="Algorithm\Application\Services\" />
-    <Folder Include="Algorithm\Domain\Entities\" />
     <Folder Include="Algorithm\Domain\Interfaces\" />
+    <Folder Include="Algorithm\Domain\Enums\" />
     <Folder Include="Algorithm\Infraestructure\Data\" />
     <Folder Include="Algorithm\Infraestructure\Repositories\" />
     <Folder Include="Audit\Application\Mappers\" />

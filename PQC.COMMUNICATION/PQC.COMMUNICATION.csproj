@@ -7,9 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Requests\Algorithm\" />
+    <Folder Include="Requests\Algorithm\NovaPasta\" />
     <Folder Include="Requests\Audit\" />
-    <Folder Include="Responses\Algorithm\" />
     <Folder Include="Responses\Auth\" />
   </ItemGroup>
 

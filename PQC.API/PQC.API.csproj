@@ -12,9 +12,16 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
+		<Content Include="Tools\**\*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+
+	<ItemGroup>
     <Folder Include="Controllers\Audit\" />
-    <Folder Include="Controllers\Algorithm\" />
+    <Folder Include="Temp\" />
   </ItemGroup>
 
   <ItemGroup>
