@@ -5,18 +5,16 @@ namespace PQC.MODULES.Documents.Application.Services.UseCases.List
 {
     public class ListDocumentsUseCase
     {
-        public DocumentListResponseJson Execute(Guid userId)
+        public DocumentListResponseJson Execute(string userId)
         {
             // Lista documentos do usuário
             var documents = DocumentInMemoryDatabase.Documents
-                .Where(d => d.UploadedByUserId == userId && d.IsActive)
+                .Where(d => d.IdUsuario == userId )
                 .Select(d => new DocumentResponseJson
                 {
-                    Id = d.Id,
-                    FileName = d.FileName,
-                    ContentType = d.ContentType,
-                    SizeInBytes = d.SizeInBytes,
-                    UploadedAt = d.UploadedAt
+                    Id = Guid.Parse(d.Id),
+                    FileName = d.Nome,
+                    UploadedAt = d.UploadEm
                 })
                 .ToList();
 

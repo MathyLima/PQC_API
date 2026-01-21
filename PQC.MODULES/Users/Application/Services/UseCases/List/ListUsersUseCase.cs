@@ -12,7 +12,7 @@ namespace PQC.MODULES.Users.Application.Services.UseCases.List
             if (!string.IsNullOrEmpty(request?.SearchTerm))
             {
                 users = users.Where(u =>
-                   u.Name.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                   u.Nome.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
                    u.Email.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase)
                 ).ToList();
             }
@@ -21,10 +21,9 @@ namespace PQC.MODULES.Users.Application.Services.UseCases.List
                
                 Users = users.Select(u => new UserResponseJson
                 {
-                    Id = u.Id,
-                    Name = u.Name,
-                    Email = u.Email,
-                    CreatedAt = u.CreatedAt,
+                    Id = Guid.Parse(u.Id),
+                    Name = u.Nome,
+                    Email = u.Email
                 }).ToList()
             };
             return response;
@@ -37,8 +36,7 @@ namespace PQC.MODULES.Users.Application.Services.UseCases.List
         {
             return new List<User>
             {
-                new User { Id = Guid.NewGuid(), Name = "João Silva", Email = "joao@test.com" },
-                new User { Id = Guid.NewGuid(), Name = "Maria Santos", Email = "maria@test.com" }
+             
             };
         }
     }

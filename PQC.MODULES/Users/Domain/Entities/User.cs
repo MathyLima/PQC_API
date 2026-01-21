@@ -1,20 +1,19 @@
-﻿namespace PQC.MODULES.Users.Domain.Entities
+﻿using PQC.MODULES.Documents.Domain.Entities;
+
+namespace PQC.MODULES.Users.Domain.Entities
 {
     public class User
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty ;
-        public string PasswordHash { get; set; } = string.Empty;
-        public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Nome { get; set; }
+        public string Cpf { get; set; }
+        public string Email { get; set; }
+        public string? Telefone { get; set; }
+        public string Login { get; set; }
+        public string Senha { get; set; }
+        public string CodigoAlgoritmo = "BCrypt";
 
-        public User()
-        {
-            Id = Guid.NewGuid();
-            CreatedAt = DateTime.UtcNow;
-            IsActive = true;
-        }
+        // Navegação
+        public ICollection<Document> Documentos { get; set; } = new List<Document>();
     }
 }

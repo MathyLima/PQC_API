@@ -26,7 +26,7 @@ namespace PQC.MODULES.Algorithm.Application.Services.UseCases
             // Aqui não existe banco, nem documento persistido
             // Apenas assinatura direta
             var result = await _algorithmExecutor.SignDocumentAsync(
-                documentContent
+                privateKeyPath
             );
 
             if (!result.Success)

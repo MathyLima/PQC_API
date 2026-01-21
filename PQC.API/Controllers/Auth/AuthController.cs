@@ -12,30 +12,21 @@ namespace PQC.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
-
-        public AuthController(IConfiguration configuration)
+        private readonly LoginUseCase _loginUseCase;
+        public AuthController(IConfiguration configuration, LoginUseCase loginUseCase)
         {
             _configuration = configuration;
+            _loginUseCase = loginUseCase;
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(LoginResponseJson), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public IActionResult Login([FromBody] LoginRequestJson request)
+        public async Task<IActionResult> Login([FromBody] LoginRequestJson request)
         {
-            var jwtSettings = _configuration.GetSection("Jwt");
-
-            var jwtService = new JwtTokenService(
-                jwtSettings["SecretKey"],
-                jwtSettings["Issuer"],
-                jwtSettings["Audience"],
-                int.Parse(jwtSettings["ExpirationHours"])
-            );
-
-            var useCase = new LoginUseCase(jwtService);
-            var response = useCase.Execute(request);
-
-            return Ok(response);
+           
+            var response = await _loginUseCase.ExecuteAsync(request);
+            return Ok(response);            
         }
     }
 }

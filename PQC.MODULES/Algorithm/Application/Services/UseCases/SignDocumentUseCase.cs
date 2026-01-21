@@ -1,5 +1,7 @@
 ﻿using PQC.EXCEPTIONS.ExceptionsBase;
 using PQC.MODULES.Documents.Infraestructure.InMemory;
+using PQC.MODULES.Signatures.Domain.Entities;
+using PQC.MODULES.Users.Infrastructure.InMemory;
 
 namespace PQC.MODULES.Algorithm.Application.Services.UseCases
 {
@@ -16,7 +18,13 @@ namespace PQC.MODULES.Algorithm.Application.Services.UseCases
         {
             // Busca o documento
             var document = DocumentInMemoryDatabase.Documents
-                .FirstOrDefault(d => d.Id == documentId && d.UploadedByUserId == userId && d.IsActive);
+                    .FirstOrDefault(d =>
+                        d.Id == documentId.ToString() &&
+                        d.IdUsuario == userId.ToString()
+                       );
+            var usuario = UserInMemoryDatabase.Users
+            .FirstOrDefault(u => u.Id == userId.ToString());
+
 
             if (document == null)
             {
@@ -24,15 +32,26 @@ namespace PQC.MODULES.Algorithm.Application.Services.UseCases
             }
 
             // Executa o algoritmo de assinatura
-            var result = await _algorithmExecutor.SignDocumentAsync(document.Content);
-
+            var result = await _algorithmExecutor.SignDocumentAsync(document.Path);
             if (!result.Success)
             {
                 throw new Exception($"Failed to sign document: {result.ErrorMessage}");
             }
 
+            var signature = new Signature
+            {
+                Id = Guid.NewGuid().ToString(),
+                IdDocumento = document.Id,
+                AssinaturaDigital = Convert.ToBase64String(result.Signature),
+                AssinadoEm = DateTime.UtcNow,
+                Nome = usuario.Nome,
+                Cpf = usuario.Cpf,
+                Email = usuario.Email
+            };
+
+
             // Salva a assinatura no documento
-            document.Signature = result.Signature;
+            document.Assinaturas.Add(signature);
         }
     }
 }

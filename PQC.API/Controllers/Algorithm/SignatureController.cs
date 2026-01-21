@@ -66,7 +66,7 @@ namespace PQC.API.Controllers.Algorithm
                 privateKeyPath
             );
 
-            var result = await executor.SignDocumentAsync(documentContent);
+            var result = await executor.SignDocumentAsync(privateKeyPath);
 
             if (!result.Success)
             {

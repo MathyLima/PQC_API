@@ -3,30 +3,45 @@ using PQC.COMMUNICATION.Responses.Users;
 using PQC.EXCEPTIONS.ExceptionsBase;
 using PQC.MODULES.Auth.Application.Services.Security;
 using PQC.MODULES.Users.Domain.Entities;
+using PQC.MODULES.Users.Infraestructure.Repositories;
 using PQC.MODULES.Users.Validators;
 
 namespace PQC.MODULES.Users.Application.Services.UseCases.Create
 {
     public class CreateUserUseCase
     {
-        public UserResponseJson Execute(CreateUserRequestJson request)
+        private readonly IUserRepository _repository;
+
+        public CreateUserUseCase(IUserRepository repository)
+        {
+            _repository = repository;
+        }
+        public async Task<UserResponseJson> Execute(CreateUserRequestJson request)
         {
             Validate(request);
+
             var passwordHash = PasswordHasher.HashPassword(request.Password);
+
             var entity = new User
             {
-                Name = request.Name,
+                Id = Guid.NewGuid().ToString(),
+                Nome = request.Name,
                 Email = request.Email,
-                PasswordHash = passwordHash,
-                CreatedAt = DateTime.UtcNow,
+                Senha = passwordHash,
+                Cpf = request.Cpf,
+                Telefone = request.Telefone,
+                Login = request.Login,
             };
 
+            await _repository.AddAsync(entity);
+            await _repository.SaveChangesAsync();
 
-            // Salva no banco a entidade criada
-            
-            //Retorna os dados que quero
-            return new UserResponseJson { Id =  entity.Id, Name = entity.Name, CreatedAt = entity.CreatedAt};
-
+            return new UserResponseJson
+            {
+                Id = Guid.Parse(entity.Id),
+                Name = entity.Nome,
+                Email =  entity.Email,
+            };
         }
 
         private void Validate(CreateUserRequestJson request)

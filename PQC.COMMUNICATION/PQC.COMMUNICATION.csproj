@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Requests\Algorithm\NovaPasta\" />
     <Folder Include="Requests\Audit\" />
-    <Folder Include="Responses\Auth\" />
   </ItemGroup>
 
   <ItemGroup>

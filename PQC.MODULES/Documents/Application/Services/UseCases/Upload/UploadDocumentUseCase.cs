@@ -30,11 +30,8 @@ namespace PQC.MODULES.Documents.Application.Services.UseCases.Upload
 
             var document = new Document
             {
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                SizeInBytes = file.Length,
-                Content = fileContent,
-                UploadedByUserId = userId
+                Nome = file.FileName,
+                IdUsuario = userId.ToString(),
             };
 
             // Salva no banco em memória
@@ -42,11 +39,9 @@ namespace PQC.MODULES.Documents.Application.Services.UseCases.Upload
 
             return new DocumentResponseJson
             {
-                Id = document.Id,
-                FileName = document.FileName,
-                ContentType = document.ContentType,
-                SizeInBytes = document.SizeInBytes,
-                UploadedAt = document.UploadedAt
+                Id = Guid.Parse(document.Id),
+                FileName = document.Nome,
+                UploadedAt = document.UploadEm
             };
         }
     }

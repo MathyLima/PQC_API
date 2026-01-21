@@ -27,15 +27,20 @@
     <Folder Include="Documents\Domain\Interfaces\" />
     <Folder Include="Documents\Infraestructure\Data\" />
     <Folder Include="Documents\Infraestructure\Repositories\" />
+    <Folder Include="Users\Domain\Interfaces\" />
     <Folder Include="Users\Infraestructure\Data\" />
-    <Folder Include="Users\Infraestructure\Repositories\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		<PrivateAssets>all</PrivateAssets>
+	</PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 

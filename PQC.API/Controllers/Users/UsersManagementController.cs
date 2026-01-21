@@ -15,6 +15,14 @@ namespace PQC.API.Controllers.Users
     [ApiController]
     public class UsersManagementController : ControllerBase
     {
+        private readonly CreateUserUseCase _createUserUseCase;
+
+        public UsersManagementController(CreateUserUseCase createUserUseCase)
+        {
+            _createUserUseCase = createUserUseCase;
+        }
+
+
         [HttpGet]
         [ProducesResponseType(typeof(UserListResponseJson),StatusCodes.Status200OK )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -39,10 +47,9 @@ namespace PQC.API.Controllers.Users
         [HttpPost]
         [ProducesResponseType(typeof(UserResponseJson), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status400BadRequest)]
-        public IActionResult Create([FromBody]CreateUserRequestJson request)
+        public async Task<IActionResult> Create([FromBody]CreateUserRequestJson request)
         {
-            var useCase = new CreateUserUseCase();
-            var response = useCase.Execute(request);
+            var response = await _createUserUseCase.Execute(request);
             return Created(string.Empty, response);
         }
 

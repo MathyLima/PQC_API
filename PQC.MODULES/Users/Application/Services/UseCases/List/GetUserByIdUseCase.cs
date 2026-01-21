@@ -18,10 +18,9 @@ namespace PQC.MODULES.Users.Application.Services.UseCases.List
 
             return new UserResponseJson
             {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                CreatedAt = user.CreatedAt,
+                Id = Guid.Parse(user.Id),
+                Name = user.Nome,
+                Email = user.Email
             };
         }
 
@@ -31,13 +30,13 @@ namespace PQC.MODULES.Users.Application.Services.UseCases.List
             {
                 new User
                 {
-                    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-                    Name = "João",
+                    Id = "11111111-1111-1111-1111-111111111111",
+                    Nome = "João",
                     Email = "joao@test.com",
-                    CreatedAt = DateTime.UtcNow
+                    
                 }
             };
-            return users.FirstOrDefault(u => u.Id == id);
+            return users.FirstOrDefault(u => u.Id == id.ToString());
         }
     }
 }

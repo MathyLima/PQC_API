@@ -47,13 +47,12 @@ namespace PQC.API.Controllers
                 return Unauthorized();
             }
 
-            var userId = Guid.Parse(userIdClaim);
             var useCase = new ListDocumentsUseCase();
-            var response = useCase.Execute(userId);
+            var response = useCase.Execute(userIdClaim);
 
             return Ok(response);
         }
-
+        /*
         [HttpGet]
         [Route("{id}")]
         [ProducesResponseType(typeof(DocumentResponseJson),StatusCodes.Status200OK)]
@@ -69,10 +68,11 @@ namespace PQC.API.Controllers
 
             var userId = Guid.Parse(userIdClaim);
             var useCase = new GetDocumentByIdUseCase();
-            var document = useCase.Execute(id, userId);
+            var document = useCase.Execute(id.ToString(), userId.ToString());
 
-            return File(document.Content, document.ContentType, document.FileName);
+            return File(document.Content, document.ContentType, document.Nome);
         }
+        */
 
         [HttpDelete]
         [Route("{id}")]
@@ -89,7 +89,7 @@ namespace PQC.API.Controllers
 
             var userId = Guid.Parse(userIdClaim);
             var useCase = new DeleteDocumentUseCase();
-            useCase.Execute(id, userId);
+            useCase.Execute(id.ToString(), userId.ToString());
 
             return NoContent();
         }

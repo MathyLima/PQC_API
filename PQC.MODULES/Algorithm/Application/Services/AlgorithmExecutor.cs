@@ -21,8 +21,9 @@ namespace PQC.MODULES.Algorithm.Application.Services
             Directory.CreateDirectory(_tempDir);
         }
 
-        public async Task<SignatureResult> SignDocumentAsync(byte[] documentContent)
+        public async Task<SignatureResult> SignDocumentAsync(string documentPath)
         {
+            var documentContent = await File.ReadAllBytesAsync(documentPath);
             var tempInputFile = Path.Combine(_tempDir, $"input_{Guid.NewGuid()}.bin");
             var tempSignatureFile = Path.Combine(_tempDir, $"signature_{Guid.NewGuid()}.sign");
 

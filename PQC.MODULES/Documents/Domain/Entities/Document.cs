@@ -1,22 +1,18 @@
-﻿namespace PQC.MODULES.Documents.Domain.Entities
+﻿using PQC.MODULES.Signatures.Domain.Entities;
+using PQC.MODULES.Users.Domain.Entities;
+
+namespace PQC.MODULES.Documents.Domain.Entities
 {
     public class Document
     {
-        public Guid Id { get; set; }
-        public string? FileName { get; set; }
-        public string? ContentType { get; set; }
-        public long SizeInBytes { get; set; }
-        public byte[]? Content { get; set; }
-        public byte[]? Signature { get; set; }
-        public Guid UploadedByUserId { get; set; }
-        public DateTime UploadedAt { get; set; }
-        public bool IsActive { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Path { get; set; }
+        public string? Nome { get; set; }
+        public string IdUsuario { get; set; }
+        public DateTime UploadEm { get; set; } = DateTime.UtcNow;
 
-        public Document()
-        {
-            Id = Guid.NewGuid();
-            UploadedAt = DateTime.UtcNow;
-            IsActive = true;
-        }
+        // Navegação
+        public User Usuario { get; set; }
+        public ICollection<Signature> Assinaturas { get; set; } = new List<Signature>();
     }
 }

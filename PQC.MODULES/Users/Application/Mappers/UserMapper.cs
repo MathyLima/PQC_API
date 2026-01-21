@@ -9,12 +9,9 @@ namespace PQC.MODULES.Users.Application.Mappers
         {
             return new UserResponseJson
             {
-                Id = user.Id,
-                Name = user.Name,
+                Id = Guid.Parse(user.Id),
+                Name = user.Nome,
                 Email = user.Email,
-                IsActive = user.IsActive,
-                CreatedAt = user.CreatedAt,
-                UpdatedAt = user.UpdatedAt,
             };
         }
     }
