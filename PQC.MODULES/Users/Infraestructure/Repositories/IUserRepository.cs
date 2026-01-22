@@ -1,20 +1,16 @@
 ﻿using PQC.MODULES.Users.Domain.Entities;
 
-namespace PQC.MODULES.Users.Infraestructure.Repositories
+public interface IUserRepository
 {
-    public interface IUserRepository
-    {
-        void Add(User user);
-        Task AddAsync(User user);
-        void Update(User user);
-        Task UpdateAsync(User user);
-        void SaveChanges();
-        Task SaveChangesAsync();
-        User? GetById(string id);
-        Task<User?> GetByLoginAsync(string login); // NOVO
-        User? GetByEmail(string email);
-        User? GetByCpf(string cpf);
+    Task AddAsync(User user);
+    Task UpdateAsync(User user);
+    Task DeleteAsync(User user);
+    Task<List<User>> GetAllAsync();
+    Task<User?> GetByIdAsync(string id);
 
+    Task<User?> GetByLoginAsync(string login);
+    Task<User?> GetByEmailAsync(string email);
+    Task<User?> GetByCpfAsync(string cpf);
 
-    }
+    Task SaveChangesAsync();
 }

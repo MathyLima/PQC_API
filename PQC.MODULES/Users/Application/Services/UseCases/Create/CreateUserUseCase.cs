@@ -20,17 +20,17 @@ namespace PQC.MODULES.Users.Application.Services.UseCases.Create
         {
             Validate(request);
 
-            var passwordHash = PasswordHasher.HashPassword(request.Password);
+            var passwordHash = PasswordHasher.HashPassword(request.Password!);
 
             var entity = new User
             {
                 Id = Guid.NewGuid().ToString(),
-                Nome = request.Name,
-                Email = request.Email,
-                Senha = passwordHash,
-                Cpf = request.Cpf,
-                Telefone = request.Telefone,
-                Login = request.Login,
+                Nome = request.Name!,
+                Email = request.Email!,
+                Senha = passwordHash!,
+                Cpf = request.Cpf!,
+                Telefone = request.Telefone!,
+                Login = request.Login!,
             };
 
             await _repository.AddAsync(entity);

@@ -19,11 +19,25 @@ namespace PQC.API.Filters
                 ThrowUnknownError(context);
             }
         }
-
+/*
         private void ThrowUnknownError(ExceptionContext context)
         {
             context.HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Result = new ObjectResult(new ResponseErrorMessagesJson("Erro Desconhecido"));
+        }
+*/
+        //PARA DEBUG
+        private void ThrowUnknownError(ExceptionContext context)
+        {
+            var exception = context.Exception;
+
+            context.HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Result = new ObjectResult(new
+            {
+                message = exception.Message,
+                type = exception.GetType().FullName,
+                stackTrace = exception.StackTrace
+            });
         }
     }
 }

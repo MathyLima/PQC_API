@@ -7,12 +7,27 @@ namespace PQC.MODULES.Users.Validators
     {
         public UpdateValidator()
         {
-            RuleFor(client => client.Name)
-                .NotEmpty().WithMessage("O nome do usuário não pode estar vazio.")
-                .MinimumLength(3).WithMessage("Nome de usuário deve conter ao menos 3 caracteres");
-            RuleFor(client => client.Email)
-                .NotEmpty().WithMessage("O email é necessário")
-                .EmailAddress().WithMessage("O e-mail deve ser válido.");
+            RuleFor(x => x.Name)
+                .MinimumLength(3)
+                .WithMessage("Nome de usuário deve conter ao menos 3 caracteres")
+                .When(x => !string.IsNullOrWhiteSpace(x.Name));
+
+            RuleFor(x => x.Email)
+                .EmailAddress()
+                .WithMessage("O e-mail deve ser válido.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Email));
+            RuleFor(x => x.Password)
+                .MinimumLength(6)
+                .WithMessage("A senha deve conter ao menos 6 caracteres")
+                .When(x => !string.IsNullOrWhiteSpace(x.Password));
+            RuleFor(x => x.Login)
+                .MinimumLength(4)
+                .WithMessage("Nome de usuário deve conter ao menos 4 caracteres")
+                .When(x => !string.IsNullOrWhiteSpace(x.Login));
+            RuleFor(x => x.Telefone)
+                .Matches(@"^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$")
+                .WithMessage("Telefone inválido")
+                .When(x => !string.IsNullOrWhiteSpace(x.Telefone));
         }
     }
 }

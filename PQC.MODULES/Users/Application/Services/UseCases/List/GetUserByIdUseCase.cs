@@ -1,14 +1,21 @@
 ﻿using PQC.COMMUNICATION.Responses.Users;
 using PQC.EXCEPTIONS.ExceptionsBase;
 using PQC.MODULES.Users.Domain.Entities;
+using PQC.MODULES.Users.Infraestructure.Repositories;
 
 namespace PQC.MODULES.Users.Application.Services.UseCases.List
 {
     public class GetUserByIdUseCase
     {
-        public UserResponseJson Execute(Guid id)
+        private readonly IUserRepository _repository;
+        public GetUserByIdUseCase(IUserRepository repository)
         {
-            var user = GetUserFromDatabase(id);
+            _repository = repository;
+        }
+
+        public async Task<UserResponseJson> Execute(Guid id)
+        {
+            var user = await _repository.GetByIdAsync(id.ToString());
 
             // ✅ Lança exceção se não encontrar
             if (user == null)
@@ -24,19 +31,5 @@ namespace PQC.MODULES.Users.Application.Services.UseCases.List
             };
         }
 
-        private User? GetUserFromDatabase(Guid id)
-        {
-            var users = new List<User>
-            {
-                new User
-                {
-                    Id = "11111111-1111-1111-1111-111111111111",
-                    Nome = "João",
-                    Email = "joao@test.com",
-                    
-                }
-            };
-            return users.FirstOrDefault(u => u.Id == id.ToString());
-        }
     }
 }

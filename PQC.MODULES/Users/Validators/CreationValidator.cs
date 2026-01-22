@@ -31,7 +31,7 @@ namespace PQC.MODULES.Users.Validators
 
             RuleFor(client => client.Cpf)
                 .NotEmpty().WithMessage("CPF é Obrigatório")
-                .Must(CpfValidator.IsValidCpf)
+                .Must(CpfValidator.IsValidCpf!)
                 .WithMessage("CPF Inválido");
         }
 

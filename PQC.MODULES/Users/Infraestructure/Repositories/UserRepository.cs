@@ -4,40 +4,41 @@ using PQC.MODULES.Users.Domain.Entities;
 
 namespace PQC.MODULES.Users.Infraestructure.Repositories
 {
-    public class UserRepository: IUserRepository
+    public class UserRepository : IUserRepository
     {
+        // 1. Campos
         private readonly AppDbContext _context;
+
+        // 2. Construtor
         public UserRepository(AppDbContext context)
         {
             _context = context;
         }
-        public void Add(User user)
-        {
-            _context.Usuarios.Add(user);
-        }
+
+        // 3. CREATE
         public async Task AddAsync(User user)
         {
             await _context.Usuarios.AddAsync(user);
         }
-        public void SaveChanges()
+        // 4. READ
+        public async Task<List<User>> GetAllAsync()
         {
-            _context.SaveChanges();
+            return await _context.Usuarios.ToListAsync();
         }
-        public async Task SaveChangesAsync()
+
+        public async Task<User?> GetByIdAsync(string id)
         {
-            await _context.SaveChangesAsync();
+            return await _context.Usuarios.FindAsync(id);
         }
-        public User? GetById(string id)
+
+        public async Task<User?> GetByEmailAsync(string email)
         {
-            return _context.Usuarios.Find(id);
+            return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
         }
-        public User? GetByEmail(string email)
+
+        public async Task<User?> GetByCpfAsync(string cpf)
         {
-            return _context.Usuarios.FirstOrDefault(u => u.Email == email);
-        }
-        public User? GetByCpf(string cpf)
-        {
-            return _context.Usuarios.FirstOrDefault(u => u.Cpf == cpf);
+            return await _context.Usuarios.FirstOrDefaultAsync(u => u.Cpf == cpf);
         }
 
         public async Task<User?> GetByLoginAsync(string login)
@@ -45,16 +46,24 @@ namespace PQC.MODULES.Users.Infraestructure.Repositories
             return await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Login == login);
         }
-
-        public void Update(User user)
-        {
-            _context.Usuarios.Update(user);
-        }
-
+        // 5. UPDATE
         public Task UpdateAsync(User user)
         {
             _context.Usuarios.Update(user);
             return Task.CompletedTask;
+        }
+
+        // 6. DELETE
+        public async Task DeleteAsync(User user)
+        {
+            _context.Usuarios.Remove(user);
+            await Task.CompletedTask;
+        }
+
+        // 7. PERSISTÊNCIA
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }
