@@ -16,26 +16,29 @@ public class LocalFileStorageService : IFileStorageService
 
     public async Task<string> SaveFileAsync(byte[] content, string fileName, string contentType, string userId)
     {
-        // 1. Cria pasta do usuário
         var userPath = Path.Combine(_basePath, userId);
         if (!Directory.Exists(userPath))
             Directory.CreateDirectory(userPath);
 
-        // 2. Cria subpasta com data atual (UTC ou fuso de Recife)
-        var dateFolder = DateTime.UtcNow.AddHours(-3).ToString("yyyy-MM-dd"); // Recife UTC-3
+        var dateFolder = DateTime.UtcNow.AddHours(-3).ToString("yyyy-MM-dd");
         var datePath = Path.Combine(userPath, dateFolder);
         if (!Directory.Exists(datePath))
             Directory.CreateDirectory(datePath);
 
-        // 3. Gera nome único para evitar sobrescrever arquivos
+        // 🔥 Garantir extensão correta
+        if (contentType == "application/pdf" && !fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            fileName += ".pdf";
+        }
+
         var uniqueName = $"{Guid.NewGuid()}_{fileName}";
         var fullPath = Path.Combine(datePath, uniqueName);
 
-        // 4. Salva o arquivo
         await File.WriteAllBytesAsync(fullPath, content);
 
-        return fullPath; // retorna o caminho físico completo
+        return fullPath;
     }
+
 
     public async Task<byte[]> GetFileAsync(string filePath)
     {

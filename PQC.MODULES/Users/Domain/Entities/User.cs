@@ -14,6 +14,6 @@ namespace PQC.MODULES.Users.Domain.Entities
         public string CodigoAlgoritmo = "BCrypt";
 
         // Navegação
-        public ICollection<Document> Documentos { get; set; } = new List<Document>();
+        public ICollection<StoredDocument> Documentos { get; set; } = new List<StoredDocument>();
     }
 }

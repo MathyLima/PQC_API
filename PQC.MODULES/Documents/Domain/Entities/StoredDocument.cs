@@ -2,7 +2,7 @@
 
 namespace PQC.MODULES.Documents.Domain.Entities
 {
-    public class Document
+    public class StoredDocument
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string? Path { get; set; }

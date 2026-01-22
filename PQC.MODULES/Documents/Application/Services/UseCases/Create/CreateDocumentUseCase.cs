@@ -55,7 +55,7 @@ public class CreateDocumentUseCase
             SignerCpf = user.Cpf,
             SignedAt = DateTime.UtcNow,
             Algorithm = signatureResult.Algorithm,
-            SignatureHash = Convert.ToBase64String(signatureResult.Signature).Substring(0, 64) + "..."
+            SignatureHash = Convert.ToBase64String(signatureResult.Signature)
         };
 
         var metadataPage = await _metadataPageGenerator.GenerateMetadataPageAsync(metadata);
@@ -75,7 +75,7 @@ public class CreateDocumentUseCase
         );
 
         // 6. PERSISTIR no banco
-        var document = new Document
+        var document = new StoredDocument
         {
             Id = Guid.NewGuid().ToString(),
             Nome = request.FileName,

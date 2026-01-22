@@ -4,6 +4,6 @@ namespace PQC.MODULES.Documents.Infraestructure.InMemory
 {
     public static class DocumentInMemoryDatabase
     {
-        public static List<Document> Documents { get; } = new();
+        public static List<StoredDocument> Documents { get; } = new();
     }
 }

@@ -13,7 +13,7 @@ namespace PQC.MODULES.Infraestructure.Data
 
         // DbSets - Tabelas
         public DbSet<User> Usuarios { get; set; }
-        public DbSet<Document> Documentos { get; set; }
+        public DbSet<StoredDocument> Documentos { get; set; }
         public DbSet<Signature> Assinaturas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -73,7 +73,7 @@ namespace PQC.MODULES.Infraestructure.Data
             });
 
             // Configuração da tabela Documento
-            modelBuilder.Entity<Document>(entity =>
+            modelBuilder.Entity<StoredDocument>(entity =>
             {
                 entity.ToTable("documento");
 

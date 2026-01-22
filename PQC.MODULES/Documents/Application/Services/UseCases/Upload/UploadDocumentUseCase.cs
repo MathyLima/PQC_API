@@ -28,7 +28,7 @@ namespace PQC.MODULES.Documents.Application.Services.UseCases.Upload
             }
             // Provavelmente executa o algoritmo de assinatura aqui
 
-            var document = new Document
+            var document = new StoredDocument
             {
                 Nome = file.FileName,
                 IdUsuario = userId.ToString(),

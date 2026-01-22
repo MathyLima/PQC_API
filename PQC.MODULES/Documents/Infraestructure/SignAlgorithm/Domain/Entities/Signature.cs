@@ -29,6 +29,6 @@ namespace PQC.MODULES.Documents.Infraestructure.SignAlgorithm.Domain.Entities
         public DateTime AssinadoEm { get; set; } = DateTime.UtcNow;
 
         // Navegação
-        public Document Documento { get; set; }
+        public StoredDocument Documento { get; set; }
     }
 }

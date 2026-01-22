@@ -6,7 +6,7 @@ namespace PQC.MODULES.Documents.Application.Services.UseCases.List
 {
     public class GetDocumentByIdUseCase
     {
-        public Document Execute(string id, string userId)
+        public StoredDocument Execute(string id, string userId)
         {
             var document = DocumentInMemoryDatabase.Documents
                 .FirstOrDefault(d => d.Id == id && d.IdUsuario == userId );

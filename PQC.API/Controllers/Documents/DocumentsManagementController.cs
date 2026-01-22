@@ -1,19 +1,34 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PQC.COMMUNICATION.Requests.Documents;
 using PQC.COMMUNICATION.Requests.Documents.Create;
 using PQC.COMMUNICATION.Responses;
 using PQC.COMMUNICATION.Responses.Documents;
 using PQC.MODULES.Documents.Application.Services.UseCases.Delete;
 using PQC.MODULES.Documents.Application.Services.UseCases.Upload;
+using PQC.MODULES.Users.Application.Services.UseCases.Create;
+using PQC.MODULES.Users.Application.Services.UseCases.Delete;
+using PQC.MODULES.Users.Application.Services.UseCases.List;
+using PQC.MODULES.Users.Application.Services.UseCases.Update;
 using System.Security.Claims;
 
 namespace PQC.API.Controllers.Documents
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class DocumentsController : ControllerBase
     {
+     
+            private readonly CreateDocumentUseCase _createDocumentUseCase;
+
+
+            public DocumentsController(
+                CreateDocumentUseCase createDocumentUseCase
+              )
+            {
+                _createDocumentUseCase = createDocumentUseCase;
+            }
+
         [HttpPost]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(DocumentResponseJson), StatusCodes.Status201Created)]
@@ -28,15 +43,16 @@ namespace PQC.API.Controllers.Documents
                 content = ms.ToArray();
             }
 
-            var useCaseInput = new CreateDocumentRequestJson
+            var useCaseInput = new CreateDocumentContentRequest
             {
-                File = request.File,
+                Content = content,
                 FileName = request.FileName,
-                Name = request.Name,
-                IdUsuario = request.IdUsuario
+                ContentType = request.File!.ContentType, // ← aqui pega o Content-Type
+                UserId = request.IdUsuario
             };
-            var useCase = new UploadDocumentUseCase();
-            var response = await useCase.Execute(request.File, Guid.Parse(useCaseInput.IdUsuario));
+
+            var response = await _createDocumentUseCase.Execute(useCaseInput);
+  
 
             return Created(string.Empty, response);
         }

@@ -11,11 +11,11 @@ namespace PQC.MODULES.Documents.Infraestructure.Repositories
         {
             _context = context;
         }
-        public async Task<Document?> GetByIdAsync(string id)
+        public async Task<StoredDocument?> GetByIdAsync(string id)
         {
             return await _context.Documentos.FindAsync(id);
         }
-        public async Task<List<Document>> GetDocumentsByUserId(string userId)
+        public async Task<List<StoredDocument>> GetDocumentsByUserId(string userId)
         {
             return await _context.Documentos
                 .Where(d => d.IdUsuario == userId)
@@ -25,7 +25,7 @@ namespace PQC.MODULES.Documents.Infraestructure.Repositories
         {
             await _context.SaveChangesAsync();
         }
-        public async Task AddAsync(Document document)
+        public async Task AddAsync(StoredDocument document)
         {
             await _context.Documentos.AddAsync(document);
         }
