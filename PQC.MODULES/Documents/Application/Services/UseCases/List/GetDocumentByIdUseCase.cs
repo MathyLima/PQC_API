@@ -2,7 +2,7 @@
 using PQC.MODULES.Documents.Domain.Entities;
 using PQC.MODULES.Documents.Infraestructure.InMemory;
 
-namespace PQC.MODULES.Documents.Application.Services.UseCases.GetById
+namespace PQC.MODULES.Documents.Application.Services.UseCases.List
 {
     public class GetDocumentByIdUseCase
     {

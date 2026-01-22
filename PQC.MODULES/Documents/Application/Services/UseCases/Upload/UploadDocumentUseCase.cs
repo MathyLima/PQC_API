@@ -41,7 +41,7 @@ namespace PQC.MODULES.Documents.Application.Services.UseCases.Upload
             {
                 Id = Guid.Parse(document.Id),
                 FileName = document.Nome,
-                UploadedAt = document.UploadEm
+                SignedAt = document.Assinado_em
             };
         }
     }

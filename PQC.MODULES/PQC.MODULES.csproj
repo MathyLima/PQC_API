@@ -7,11 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Algorithm\Application\Mappers\" />
-    <Folder Include="Algorithm\Domain\Interfaces\" />
-    <Folder Include="Algorithm\Domain\Enums\" />
-    <Folder Include="Algorithm\Infraestructure\Data\" />
-    <Folder Include="Algorithm\Infraestructure\Repositories\" />
+    <Compile Remove="Documents\Infraestructure\SignAlgorithm\Application\Mappers\**" />
+    <Compile Remove="Documents\Infraestructure\SignAlgorithm\Infraestructure\**" />
+    <EmbeddedResource Remove="Documents\Infraestructure\SignAlgorithm\Application\Mappers\**" />
+    <EmbeddedResource Remove="Documents\Infraestructure\SignAlgorithm\Infraestructure\**" />
+    <None Remove="Documents\Infraestructure\SignAlgorithm\Application\Mappers\**" />
+    <None Remove="Documents\Infraestructure\SignAlgorithm\Infraestructure\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Documents\Infraestructure\SignAlgorithm\Domain\Interfaces\" />
+    <Folder Include="Documents\Infraestructure\SignAlgorithm\Domain\Enums\" />
     <Folder Include="Audit\Application\Mappers\" />
     <Folder Include="Audit\Application\Services\" />
     <Folder Include="Audit\Domain\Entities\" />
@@ -26,7 +32,6 @@
     <Folder Include="Documents\Application\Mappers\" />
     <Folder Include="Documents\Domain\Interfaces\" />
     <Folder Include="Documents\Infraestructure\Data\" />
-    <Folder Include="Documents\Infraestructure\Repositories\" />
     <Folder Include="Users\Domain\Interfaces\" />
     <Folder Include="Users\Infraestructure\Data\" />
   </ItemGroup>
@@ -34,6 +39,7 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="itext" Version="9.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
 		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

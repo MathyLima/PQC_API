@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using PQC.API.Filters;
 using PQC.MODULES.Auth.DependencyInjection;
 using PQC.MODULES.Auth.Domain.Settings;
+using PQC.MODULES.Documents.DependencyInjection;
 using PQC.MODULES.Infraestructure.Data;
 using PQC.MODULES.Users.DependencyInjection;
 using System.Text;
@@ -55,6 +56,8 @@ builder.Services.Configure<JwtSettings>(
 //Modulos de dependency injection
 builder.Services.AddUsersModule();
 builder.Services.AddAuthModule();
+
+builder.Services.AddUDocumentsModule(builder.Configuration);
 
 var app = builder.Build();
 

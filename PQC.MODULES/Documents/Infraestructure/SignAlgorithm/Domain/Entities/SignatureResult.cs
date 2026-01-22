@@ -1,4 +1,4 @@
-﻿namespace PQC.MODULES.Algorithm.Domain.Entities
+﻿namespace PQC.MODULES.Documents.Infraestructure.SignAlgorithm.Domain.Entities
 {
     public class SignatureResult
     {

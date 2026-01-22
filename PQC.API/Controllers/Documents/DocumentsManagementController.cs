@@ -1,15 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PQC.COMMUNICATION.Requests.Documents;
+using PQC.COMMUNICATION.Requests.Documents.Create;
 using PQC.COMMUNICATION.Responses;
 using PQC.COMMUNICATION.Responses.Documents;
 using PQC.MODULES.Documents.Application.Services.UseCases.Delete;
-using PQC.MODULES.Documents.Application.Services.UseCases.GetById;
-using PQC.MODULES.Documents.Application.Services.UseCases.List;
 using PQC.MODULES.Documents.Application.Services.UseCases.Upload;
 using System.Security.Claims;
 
-namespace PQC.API.Controllers
+namespace PQC.API.Controllers.Documents
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -21,26 +19,34 @@ namespace PQC.API.Controllers
         [ProducesResponseType(typeof(DocumentResponseJson), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ResponseErrorMessagesJson), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Upload([FromForm] IFormDTO request)
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim))
+        public async Task<IActionResult> Upload([FromForm] CreateDocumentRequestJson request)
+        { 
+            byte[] content;
+            using (var ms = new MemoryStream())
             {
-                return Unauthorized();
+                await request.File!.CopyToAsync(ms);
+                content = ms.ToArray();
             }
 
-            var userId = Guid.Parse(userIdClaim);
+            var useCaseInput = new CreateDocumentRequestJson
+            {
+                File = request.File,
+                FileName = request.FileName,
+                Name = request.Name,
+                IdUsuario = request.IdUsuario
+            };
             var useCase = new UploadDocumentUseCase();
-            var response = await useCase.Execute(request.File, userId);
+            var response = await useCase.Execute(request.File, Guid.Parse(useCaseInput.IdUsuario));
 
             return Created(string.Empty, response);
         }
-
+        /*
         [HttpGet]
         [ProducesResponseType(typeof(DocumentListResponseJson), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status401Unauthorized)]
         public IActionResult List()
         {
+
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
             {
@@ -52,6 +58,7 @@ namespace PQC.API.Controllers
 
             return Ok(response);
         }
+        */
         /*
         [HttpGet]
         [Route("{id}")]

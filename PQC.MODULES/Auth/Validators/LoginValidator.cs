@@ -1,7 +1,6 @@
 ﻿// PQC.MODULES.Auth/Validators/LoginValidator.cs
 using FluentValidation;
 using PQC.COMMUNICATION.Requests.Auth;
-using PQC.COMMUNICATION.Requests.Auth.Login;
 
 namespace PQC.MODULES.Auth.Validators
 {

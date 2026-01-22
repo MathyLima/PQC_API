@@ -1,5 +1,5 @@
-﻿using PQC.COMMUNICATION.Requests.Auth.Login;
-using PQC.COMMUNICATION.Responses.Auth;
+﻿using PQC.COMMUNICATION.Requests.Auth;
+using PQC.COMMUNICATION.Responses.Audit;
 using PQC.EXCEPTIONS.ExceptionsBase;
 using PQC.MODULES.Auth.Application.Services.Security;
 using PQC.MODULES.Auth.Validators;

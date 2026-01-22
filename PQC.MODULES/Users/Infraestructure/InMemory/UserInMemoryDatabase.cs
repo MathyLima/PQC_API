@@ -1,6 +1,6 @@
 ﻿using PQC.MODULES.Users.Domain.Entities;
 
-namespace PQC.MODULES.Users.Infrastructure.InMemory
+namespace PQC.MODULES.Users.Infraestructure.InMemory
 {
     public static class UserInMemoryDatabase
     {

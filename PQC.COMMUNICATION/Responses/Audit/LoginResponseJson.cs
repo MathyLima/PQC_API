@@ -1,5 +1,5 @@
 ﻿// PQC.COMMUNICATION/Responses/Auth/LoginResponseJson.cs
-namespace PQC.COMMUNICATION.Responses.Auth
+namespace PQC.COMMUNICATION.Responses.Audit
 {
     public class LoginResponseJson
     {

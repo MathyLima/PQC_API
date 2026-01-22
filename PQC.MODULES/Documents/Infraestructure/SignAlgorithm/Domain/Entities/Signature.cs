@@ -1,7 +1,21 @@
 ﻿// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
+
+// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
+
+// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
+
+// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
+
+// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
+
+// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
+
+// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
+
+// PQC.MODULES/Signatures/Domain/Entities/Signature.cs
 using PQC.MODULES.Documents.Domain.Entities;
 
-namespace PQC.MODULES.Signatures.Domain.Entities
+namespace PQC.MODULES.Documents.Infraestructure.SignAlgorithm.Domain.Entities
 {
     public class Signature
     {

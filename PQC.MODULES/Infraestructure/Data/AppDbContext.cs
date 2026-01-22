@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PQC.MODULES.Documents.Domain.Entities;
-using PQC.MODULES.Signatures.Domain.Entities;
+using PQC.MODULES.Documents.Infraestructure.SignAlgorithm.Domain.Entities;
 using PQC.MODULES.Users.Domain.Entities;
 
 namespace PQC.MODULES.Infraestructure.Data
@@ -99,77 +99,39 @@ namespace PQC.MODULES.Infraestructure.Data
                     .HasMaxLength(36)
                     .IsRequired();
 
-                entity.Property(e => e.UploadEm)
+                entity.Property(e => e.Assinado_em)
                     .HasColumnName("upload_em")
                     .IsRequired();
+              
+                entity.Property(e => e.TipoArquivo)
+                    .HasColumnName("tipo_arquivo")
+                    .IsRequired();
+                
+                entity.Property(e => e.AssinaturaDigital)
+                    .HasColumnName("assinatura")
+                    .IsRequired();
+                
+                entity.Property(e=>e.AlgoritmoAssinatura)
+                    .HasColumnType("algoritmo_assinatura")
+                    .IsRequired();
+                
+                entity.Property(e => e.Tamanho)
+                    .HasColumnName("tamanho")
+                    .IsRequired();
+
 
                 // Relacionamento: 1 Usuario -> N Documentos
-                entity.HasOne(d => d.Usuario)
-                    .WithMany(u => u.Documentos)
-                    .HasForeignKey(d => d.IdUsuario)
-                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.Usuario)   
+                  .WithMany(u => u.Documentos)
+                  .HasForeignKey(d => d.IdUsuario)
+                  .OnDelete(DeleteBehavior.Restrict);
 
                 // Índices
                 entity.HasIndex(e => e.IdUsuario);
-                entity.HasIndex(e => e.UploadEm);
+                entity.HasIndex(e => e.Assinado_em);
             });
 
-            // Configuração da tabela Assinatura
-            modelBuilder.Entity<Signature>(entity =>
-            {
-                entity.ToTable("assinaturas");
-
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasMaxLength(36)
-                    .IsRequired();
-
-                entity.Property(e => e.IdDocumento)
-                    .HasColumnName("id_documento")
-                    .HasMaxLength(36)
-                    .IsRequired();
-
-                entity.Property(e => e.Nome)
-                    .HasColumnName("nome")
-                    .HasMaxLength(255)
-                    .IsRequired();
-
-                entity.Property(e => e.Cpf)
-                    .HasColumnName("cpf")
-                    .HasMaxLength(11)
-                    .IsRequired();
-
-                entity.Property(e => e.Email)
-                    .HasColumnName("email")
-                    .HasMaxLength(255)
-                    .IsRequired();
-
-                entity.Property(e => e.Telefone)
-                    .HasColumnName("telefone")
-                    .HasMaxLength(20);
-
-                entity.Property(e => e.AssinaturaDigital)
-                    .HasColumnName("assinatura_digital")
-                    .HasColumnType("text")
-                    .IsRequired();
-
-                entity.Property(e => e.AssinadoEm)
-                    .HasColumnName("assinado_em")
-                    .IsRequired();
-
-                // Relacionamento: 1 Documento -> N Assinaturas
-                entity.HasOne(a => a.Documento)
-                    .WithMany(d => d.Assinaturas)
-                    .HasForeignKey(a => a.IdDocumento)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                // Índices
-                entity.HasIndex(e => e.IdDocumento);
-                entity.HasIndex(e => e.Cpf);
-                entity.HasIndex(e => e.AssinadoEm);
-            });
+           
         }
     }
 }

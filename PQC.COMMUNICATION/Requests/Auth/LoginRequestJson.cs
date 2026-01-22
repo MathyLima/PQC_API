@@ -1,4 +1,4 @@
-﻿namespace PQC.COMMUNICATION.Requests.Auth.Login
+﻿namespace PQC.COMMUNICATION.Requests.Auth
 {
     public class LoginRequestJson
     {
