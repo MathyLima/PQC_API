@@ -53,7 +53,7 @@ public class CreateDocumentUseCase
             SignerName = user.Nome,
             SignerEmail = user.Email,
             SignerCpf = user.Cpf,
-            SignedAt = DateTime.UtcNow,
+            SignedAt = GetRecifeTime(),
             Algorithm = signatureResult.Algorithm,
             SignatureHash = Convert.ToBase64String(signatureResult.Signature)
         };
@@ -89,7 +89,32 @@ public class CreateDocumentUseCase
         };
 
         await _repository.AddAsync(document);
+        await _repository.SaveChangesAsync();
 
         return document.Id;
+    }
+
+    private DateTime GetRecifeTime()
+    {
+        try
+        {
+            // Tenta Windows primeiro
+            var tzInfo = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tzInfo);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            try
+            {
+                // Se falhar, tenta Linux/Mac
+                var tzInfo = TimeZoneInfo.FindSystemTimeZoneById("America/Recife");
+                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tzInfo);
+            }
+            catch
+            {
+                // Fallback: UTC-3 fixo
+                return DateTime.UtcNow.AddHours(-3);
+            }
+        }
     }
 }

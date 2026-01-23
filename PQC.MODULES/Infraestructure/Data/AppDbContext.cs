@@ -75,7 +75,7 @@ namespace PQC.MODULES.Infraestructure.Data
             // Configuração da tabela Documento
             modelBuilder.Entity<StoredDocument>(entity =>
             {
-                entity.ToTable("documento");
+                entity.ToTable("documentos");
 
                 entity.HasKey(e => e.Id);
 
@@ -100,7 +100,7 @@ namespace PQC.MODULES.Infraestructure.Data
                     .IsRequired();
 
                 entity.Property(e => e.Assinado_em)
-                    .HasColumnName("upload_em")
+                    .HasColumnName("assinado_em")
                     .IsRequired();
               
                 entity.Property(e => e.TipoArquivo)
@@ -112,7 +112,7 @@ namespace PQC.MODULES.Infraestructure.Data
                     .IsRequired();
                 
                 entity.Property(e=>e.AlgoritmoAssinatura)
-                    .HasColumnType("algoritmo_assinatura")
+                    .HasColumnName("algoritmo_assinatura")
                     .IsRequired();
                 
                 entity.Property(e => e.Tamanho)
