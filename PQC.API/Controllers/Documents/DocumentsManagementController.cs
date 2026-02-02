@@ -1,16 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PQC.COMMUNICATION.Requests.Documents;
-using PQC.COMMUNICATION.Requests.Documents.Create;
-using PQC.COMMUNICATION.Responses;
-using PQC.COMMUNICATION.Responses.Documents;
-using PQC.MODULES.Documents.Application.Services.UseCases.Delete;
-using PQC.MODULES.Documents.Application.Services.UseCases.Upload;
-using PQC.MODULES.Users.Application.Services.UseCases.Create;
-using PQC.MODULES.Users.Application.Services.UseCases.Delete;
-using PQC.MODULES.Users.Application.Services.UseCases.List;
-using PQC.MODULES.Users.Application.Services.UseCases.Update;
-using System.Security.Claims;
+using PQC.API.Models;
+using PQC.MODULES.Documents.Application.DTOs;
+using PQC.MODULES.Documents.Application.UseCases.Sign;
 
 namespace PQC.API.Controllers.Documents
 {
@@ -19,23 +11,26 @@ namespace PQC.API.Controllers.Documents
     public class DocumentsController : ControllerBase
     {
      
-            private readonly CreateDocumentUseCase _createDocumentUseCase;
+            private readonly SignDocumentUseCase _signDocumentUseCase;
+           // private readonly ValidateDocumentUseCase _validateDocumentUseCase;
 
-
-            public DocumentsController(
-                CreateDocumentUseCase createDocumentUseCase
+        public DocumentsController(
+                SignDocumentUseCase signDocumentUseCase
+              //  ValidateDocumentUseCase validateUseCase
               )
             {
-                _createDocumentUseCase = createDocumentUseCase;
-            }
+                _signDocumentUseCase = signDocumentUseCase;
+                //_validateDocumentUseCase = validateUseCase;
+        }
 
-        [HttpPost]
+        [HttpPost("sign")]
         [Consumes("multipart/form-data")]
-        [ProducesResponseType(typeof(DocumentResponseJson), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ResponseErrorMessagesJson), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Upload([FromForm] CreateDocumentRequestJson request)
-        { 
+        [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+        //  [ProducesResponseType(typeof(ResponseErrorMessagesJson), StatusCodes.Status400BadRequest)]
+        //  [ProducesResponseType(typeof(ResponseErrorMessagesJson), StatusCodes.Status401Unauthorized)]
+        //[Authorize]
+        public async Task<IActionResult> SignDocument([FromForm] CreateDocumentRequestJson request)
+        {
             byte[] content;
             using (var ms = new MemoryStream())
             {
@@ -43,19 +38,24 @@ namespace PQC.API.Controllers.Documents
                 content = ms.ToArray();
             }
 
-            var useCaseInput = new CreateDocumentContentRequest
+            var useCaseInput = new DocumentUploadRequest
             {
+                UserId = request.UserId!,
                 Content = content,
                 FileName = request.FileName,
-                ContentType = request.File!.ContentType, // ← aqui pega o Content-Type
-                UserId = request.IdUsuario
+                ContentType = request.File.ContentType,
             };
 
-            var response = await _createDocumentUseCase.Execute(useCaseInput);
-  
+            var response = await _signDocumentUseCase.Execute(useCaseInput);
 
-            return Created(string.Empty, response);
+            // Retorna o arquivo assinado para download
+            return File(
+                response.SignedContent,
+                response.ContentType,
+                response.DocumentName
+            );
         }
+
         /*
         [HttpGet]
         [ProducesResponseType(typeof(DocumentListResponseJson), StatusCodes.Status200OK)]
@@ -96,7 +96,7 @@ namespace PQC.API.Controllers.Documents
             return File(document.Content, document.ContentType, document.Nome);
         }
         */
-
+        /*
         [HttpDelete]
         [Route("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -116,5 +116,6 @@ namespace PQC.API.Controllers.Documents
 
             return NoContent();
         }
+        */
     }
 }

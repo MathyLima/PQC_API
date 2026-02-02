@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
-using PQC.COMMUNICATION.Requests.Users.Create;
 using PQC.MODULES.Users.Validators.SharedValidators;
+using PQC.SHARED.Communication.DTOs.Users.Requests;
 
 namespace PQC.MODULES.Users.Validators
 {

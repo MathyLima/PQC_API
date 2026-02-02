@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PQC.COMMUNICATION.Requests.Users.Create;
-using PQC.COMMUNICATION.Requests.Users.List;
-using PQC.COMMUNICATION.Requests.Users.Update;
-using PQC.COMMUNICATION.Responses;
-using PQC.COMMUNICATION.Responses.Users;
-using PQC.MODULES.Users.Application.Services.UseCases.Create;
-using PQC.MODULES.Users.Application.Services.UseCases.Delete;
-using PQC.MODULES.Users.Application.Services.UseCases.List;
-using PQC.MODULES.Users.Application.Services.UseCases.Update;
+using PQC.MODULES.Users.Application.UseCases.Create;
+using PQC.MODULES.Users.Application.UseCases.Delete;
+using PQC.MODULES.Users.Application.UseCases.List;
+using PQC.MODULES.Users.Application.UseCases.Update;
+using PQC.SHARED.Communication.DTOs.Users.Requests;
+using PQC.SHARED.Communication.DTOs.Users.Responses;
 
 namespace PQC.API.Controllers.Users
 {
@@ -37,16 +34,16 @@ namespace PQC.API.Controllers.Users
 
 
         [HttpGet]
-        [ProducesResponseType(typeof(UserListResponseJson),StatusCodes.Status200OK )]
+        [ProducesResponseType(typeof(ShortUsersListResponse),StatusCodes.Status200OK )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAll([FromQuery] UserListRequestJson? request) {
-            var response = await _listUsersUseCase.Execute(request!);
+        public async Task<IActionResult> GetAll() {
+            var response = await _listUsersUseCase.Execute();
             return Ok(response);
         }
 
         [HttpGet]
         [Route("{Id}")]
-        [ProducesResponseType(typeof(UserResponseJson), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ShortUserResponseJson), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetById([FromRoute]Guid Id)
         {
@@ -55,8 +52,8 @@ namespace PQC.API.Controllers.Users
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(UserResponseJson), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ShortUserResponseJson), StatusCodes.Status201Created)]
+        //[ProducesResponseType(typeof(ResponseErrorMessagesJson),StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody]CreateUserRequestJson request)
         {
             var response = await _createUserUseCase.Execute(request);
@@ -65,7 +62,7 @@ namespace PQC.API.Controllers.Users
 
         [HttpPut]
         [Route("{id}")]
-        [ProducesResponseType(typeof(UserResponseJson), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ShortUserResponseJson), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update([FromRoute]Guid id, [FromBody] UpdateUserRequestJson request)

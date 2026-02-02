@@ -9,25 +9,22 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
   </ItemGroup>
 
 	<ItemGroup>
-		<Content Include="Tools\**\*">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
+	  <Compile Remove="Controllers\Audit\**" />
+	  <Content Remove="Controllers\Audit\**" />
+	  <EmbeddedResource Remove="Controllers\Audit\**" />
+	  <None Remove="Controllers\Audit\**" />
 	</ItemGroup>
 
-
-	<ItemGroup>
-    <Folder Include="Controllers\Audit\" />
-    <Folder Include="Temp\" />
-  </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\PQC.COMMUNICATION\PQC.COMMUNICATION.csproj" />
+    <ProjectReference Include="..\PQC.INFRAESTRUCTURE\PQC.INFRAESTRUCTURE.csproj" />
     <ProjectReference Include="..\PQC.MODULES\PQC.MODULES.csproj" />
+    <ProjectReference Include="..\PQC.SHARED\PQC.SHARED.csproj" />
   </ItemGroup>
 
 </Project>

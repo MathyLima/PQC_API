@@ -1,19 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PQC.MODULES.Infraestructure.Data;
 using PQC.MODULES.Users.Domain.Entities;
+using PQC.MODULES.Users.Domain.Interfaces.Persistence;
 
 namespace PQC.MODULES.Users.Infraestructure.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        // 1. Campos
-        private readonly AppDbContext _context;
+        private readonly IUsersDbContext _context;
 
-        // 2. Construtor
-        public UserRepository(AppDbContext context)
+        public UserRepository(IUsersDbContext usersDbContext)
         {
-            _context = context;
+            _context = usersDbContext;
         }
+       
 
         // 3. CREATE
         public async Task AddAsync(User user)

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using PQC.MODULES.Documents.Application.DTOs;
 
 namespace PQC.MODULES.Documents.Validators
 {
@@ -8,10 +8,11 @@ namespace PQC.MODULES.Documents.Validators
         private static readonly string[] AllowedExtensions = { ".pdf" };
         private static readonly string[] AllowedContentTypes = { "application/pdf" };
 
-        public List<string> Validate(IFormFile file)
+        public List<string> Validate(DocumentUploadRequest request)
         {
             var errors = new List<string>();
-
+            var file = request.Content;
+            var contentType = request.ContentType;
             if (file == null || file.Length == 0)
             {
                 errors.Add("O arquivo é obrigatório.");
@@ -25,16 +26,16 @@ namespace PQC.MODULES.Documents.Validators
             }
 
             // Valida extensão
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var extension = Path.GetExtension(request.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(extension))
             {
                 errors.Add($"Apenas arquivos PDF são permitidos. Extensão recebida: {extension}");
             }
 
             // Valida content type
-            if (!AllowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
+            if (!AllowedContentTypes.Contains(contentType.ToLowerInvariant()))
             {
-                errors.Add($"Tipo de arquivo inválido. Esperado: application/pdf. Recebido: {file.ContentType}");
+                errors.Add($"Tipo de arquivo inválido. Esperado: application/pdf. Recebido: {contentType}");
             }
 
             return errors;

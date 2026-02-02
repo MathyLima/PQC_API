@@ -1,32 +1,59 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using PQC.API.Filters;
-using PQC.MODULES.Auth.DependencyInjection;
-using PQC.MODULES.Auth.Domain.Settings;
+using PQC.INFRAESTRUCTURE.Data;
+using PQC.INFRAESTRUCTURE.DependencyInjection;
+using PQC.MODULES.Authentication.DependencyInjection;
 using PQC.MODULES.Documents.DependencyInjection;
-using PQC.MODULES.Infraestructure.Data;
+using PQC.MODULES.Documents.Domain.Interfaces;
 using PQC.MODULES.Users.DependencyInjection;
 using System.Text;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 36))
-    )
-);
+// ========== 1️⃣ INFRAESTRUTURA COMPARTILHADA ==========
+builder.Services.AddSharedInfrastructure(builder.Configuration);
 
+// ========== 2️⃣ SERVIÇOS DA API ==========
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// ========== 3️⃣ MÓDULOS ==========
+builder.Services.AddUsersModule(builder.Configuration);
+builder.Services.AddAuthModule(builder.Configuration);
+builder.Services.AddDocumentsModule();
+
+// ========== 4️⃣ CONTROLLERS E FILTROS ==========
 builder.Services.AddControllers();
+builder.Services.AddMvc(options => options.Filters.Add<ExceptionFilter>());
+
+// ========== 5️⃣ SWAGGER COM JWT ==========
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
 
-
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+});
+// ========== 6️⃣ JWT AUTHENTICATION COM DEBUG ==========
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"];
+var secretKey = jwtSettings["SecretKey"]
+    ?? throw new InvalidOperationException("JWT SecretKey não configurado");
 
+Console.WriteLine($"🔑 JWT Config:");
+Console.WriteLine($"   Issuer: {jwtSettings["Issuer"]}");
+Console.WriteLine($"   Audience: {jwtSettings["Audience"]}");
+Console.WriteLine($"   SecretKey length: {secretKey.Length} caracteres");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -40,35 +67,79 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(secretKey ?? string.Empty)
-            )
+                Encoding.UTF8.GetBytes(secretKey)
+            ),
+            ClockSkew = TimeSpan.Zero
+        };
+
+        // ========== DEBUG EVENTS ==========
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var authHeader = context.Request.Headers["Authorization"].ToString();
+                Console.WriteLine($"📨 Authorization Header: {(string.IsNullOrEmpty(authHeader) ? "VAZIO" : authHeader.Substring(0, Math.Min(50, authHeader.Length)) + "...")}");
+                return Task.CompletedTask;
+            },
+
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("✅ TOKEN VÁLIDO!");
+                var claims = context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}");
+                Console.WriteLine($"   Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
+                return Task.CompletedTask;
+            },
+
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"❌ FALHA NA AUTENTICAÇÃO!");
+                Console.WriteLine($"   Tipo: {context.Exception.GetType().Name}");
+                Console.WriteLine($"   Mensagem: {context.Exception.Message}");
+
+                if (context.Exception is SecurityTokenExpiredException)
+                {
+                    Console.WriteLine("   ⏰ Token EXPIRADO!");
+                }
+                else if (context.Exception is SecurityTokenInvalidSignatureException)
+                {
+                    Console.WriteLine("   🔐 Assinatura INVÁLIDA! (SecretKey diferente?)");
+                }
+                else if (context.Exception is SecurityTokenInvalidIssuerException)
+                {
+                    Console.WriteLine("   🏢 Issuer INVÁLIDO!");
+                }
+                else if (context.Exception is SecurityTokenInvalidAudienceException)
+                {
+                    Console.WriteLine("   👥 Audience INVÁLIDO!");
+                }
+
+                return Task.CompletedTask;
+            },
+
+            OnChallenge = context =>
+            {
+                Console.WriteLine($"🚫 CHALLENGE!");
+                Console.WriteLine($"   Error: {context.Error}");
+                Console.WriteLine($"   ErrorDescription: {context.ErrorDescription}");
+                return Task.CompletedTask;
+            }
         };
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddMvc(option => option.Filters.Add(typeof(ExceptionFilter)));
 
-
-builder.Services.Configure<JwtSettings>(
-    builder.Configuration.GetSection("Jwt")
-);
-
-//Modulos de dependency injection
-builder.Services.AddUsersModule();
-builder.Services.AddAuthModule();
-
-builder.Services.AddUDocumentsModule(builder.Configuration);
-
+// ========== 7️⃣ BUILD APP ==========
 var app = builder.Build();
 
+// ========== 8️⃣ TESTAR CONEXÃO COM BANCO ==========
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.OpenConnection();
+        await db.Database.OpenConnectionAsync();
         Console.WriteLine("✅ Conectado ao banco com sucesso");
-        db.Database.CloseConnection();
+        await db.Database.CloseConnectionAsync();
     }
     catch (Exception ex)
     {
@@ -77,7 +148,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
+// ========== 9️⃣ MIDDLEWARE PIPELINE ==========
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -89,5 +160,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+Console.WriteLine("🚀 API iniciada!");
 
 app.Run();

@@ -1,9 +1,7 @@
 ﻿// PQC.API/Controllers/AuthController.cs
 using Microsoft.AspNetCore.Mvc;
-using PQC.COMMUNICATION.Requests.Auth;
-using PQC.COMMUNICATION.Responses.Audit;
-using PQC.MODULES.Auth.Application.Services.Security;
-using PQC.MODULES.Auth.Application.Services.UseCases.Login;
+using PQC.MODULES.Authentication.Application.DTOs;
+using PQC.MODULES.Authentication.Application.UseCases.Login;
 
 namespace PQC.API.Controllers.Auth
 {

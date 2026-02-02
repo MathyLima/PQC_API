@@ -7,55 +7,54 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Documents\Infraestructure\SignAlgorithm\Application\Mappers\**" />
-    <Compile Remove="Documents\Infraestructure\SignAlgorithm\Infraestructure\**" />
-    <EmbeddedResource Remove="Documents\Infraestructure\SignAlgorithm\Application\Mappers\**" />
-    <EmbeddedResource Remove="Documents\Infraestructure\SignAlgorithm\Infraestructure\**" />
-    <None Remove="Documents\Infraestructure\SignAlgorithm\Application\Mappers\**" />
-    <None Remove="Documents\Infraestructure\SignAlgorithm\Infraestructure\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Documents\Infraestructure\SignAlgorithm\Domain\Interfaces\" />
-    <Folder Include="Documents\Infraestructure\SignAlgorithm\Domain\Enums\" />
-    <Folder Include="Audit\Application\Mappers\" />
-    <Folder Include="Audit\Application\Services\" />
-    <Folder Include="Audit\Domain\Entities\" />
-    <Folder Include="Audit\Domain\Interfaces\" />
-    <Folder Include="Audit\Infraestructure\Data\" />
-    <Folder Include="Audit\Infraestructure\Repositories\" />
-    <Folder Include="Auth\Application\Mappers\" />
-    <Folder Include="Auth\Domain\Entities\" />
-    <Folder Include="Auth\Domain\Interfaces\" />
-    <Folder Include="Auth\Infraestructure\Data\" />
-    <Folder Include="Auth\Infraestructure\Repositories\" />
-    <Folder Include="Documents\Application\Mappers\" />
-    <Folder Include="Documents\Domain\Interfaces\" />
-    <Folder Include="Documents\Infraestructure\Data\" />
-    <Folder Include="Users\Domain\Interfaces\" />
-    <Folder Include="Users\Infraestructure\Data\" />
+    <Compile Remove="Audit\**" />
+    <Compile Remove="Authentication\Application\Mappers\**" />
+    <Compile Remove="Authentication\Domain\Entities\**" />
+    <Compile Remove="Authentication\Domain\Interfaces\**" />
+    <Compile Remove="Authentication\Infraestructure\**" />
+    <Compile Remove="Documents\Application\Mappers\**" />
+    <Compile Remove="Documents\Infraestructure\Data\**" />
+    <Compile Remove="Users\Infraestructure\Data\**" />
+    <EmbeddedResource Remove="Audit\**" />
+    <EmbeddedResource Remove="Authentication\Application\Mappers\**" />
+    <EmbeddedResource Remove="Authentication\Domain\Entities\**" />
+    <EmbeddedResource Remove="Authentication\Domain\Interfaces\**" />
+    <EmbeddedResource Remove="Authentication\Infraestructure\**" />
+    <EmbeddedResource Remove="Documents\Application\Mappers\**" />
+    <EmbeddedResource Remove="Documents\Infraestructure\Data\**" />
+    <EmbeddedResource Remove="Users\Infraestructure\Data\**" />
+    <None Remove="Audit\**" />
+    <None Remove="Authentication\Application\Mappers\**" />
+    <None Remove="Authentication\Domain\Entities\**" />
+    <None Remove="Authentication\Domain\Interfaces\**" />
+    <None Remove="Authentication\Infraestructure\**" />
+    <None Remove="Documents\Application\Mappers\**" />
+    <None Remove="Documents\Infraestructure\Data\**" />
+    <None Remove="Users\Infraestructure\Data\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
-    <PackageReference Include="itext" Version="9.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.2" />
+    <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
-    <!-- Atualize o Pomelo para uma versão compatível com EF Core 10 -->
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="10.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PQC.COMMUNICATION\PQC.COMMUNICATION.csproj" />
-    <ProjectReference Include="..\PQC.EXCEPTIONS\PQC.EXCEPTIONS.csproj" />
+   
+    <ProjectReference Include="..\PQC.SHARED\PQC.SHARED.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Documents\Application\Interfaces\FileStorageService\" />
   </ItemGroup>
 
 </Project>

@@ -7,6 +7,7 @@ namespace PQC.MODULES.Documents.Infraestructure.Repositories
         Task AddAsync(StoredDocument document);
         Task<StoredDocument?> GetByIdAsync(string id);
         Task<List<StoredDocument>> GetDocumentsByUserId(string userId);
+        Task<StoredDocument?> GetByCpfAndTimestamp(string cpf, DateTime signedAt); // ← NOVO
         Task SaveChangesAsync();
 
     }

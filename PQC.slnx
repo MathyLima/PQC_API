@@ -1,6 +1,8 @@
 <Solution>
-  <Project Path="PQC.API/PQC.API.csproj" />
-  <Project Path="PQC.COMMUNICATION/PQC.COMMUNICATION.csproj" />
-  <Project Path="PQC.EXCEPTIONS/PQC.EXCEPTIONS.csproj" />
-  <Project Path="PQC.MODULES/PQC.MODULES.csproj" />
+  <Folder Name="/src/">
+    <Project Path="PQC.API/PQC.API.csproj" />
+    <Project Path="PQC.INFRAESTRUCTURE/PQC.INFRAESTRUCTURE.csproj" Id="2fdab9db-142c-407f-8ec3-272579d0846d" />
+    <Project Path="PQC.MODULES/PQC.MODULES.csproj" />
+    <Project Path="PQC.SHARED/PQC.SHARED.csproj" Id="2603d177-2e3d-48b5-82b2-ecc5de0eb8c1" />
+  </Folder>
 </Solution>
