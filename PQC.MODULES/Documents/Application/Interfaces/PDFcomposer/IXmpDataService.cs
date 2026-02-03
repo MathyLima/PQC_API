@@ -2,7 +2,16 @@
 {
     public interface IXmpMetaDataService
     {
-        string GenerateXmpMetadata(SignatureMetadata metadata, string existingXmp = null);
+        // Pré-assinatura (sem hash real)
+      
+        // Pós-assinatura (com hash real)
+        string GenerateXmpMetadata(
+            SignatureMetadata metadata,
+            string signatureBase64,
+            string existingXmp
+        );
 
+        void ValidateExistingXmp(string existingXmp);
     }
+
 }

@@ -1,17 +1,24 @@
-﻿using PQC.SHARED.Time;
-
-public class SignatureMetadata
+﻿public class SignatureMetadata
 {
     public string DocumentId { get; set; }
+
     public string DocumentName { get; set; }
+
     public string SignerName { get; set; }
+
     public string SignerEmail { get; set; }
-    public string SignerCpf { get; set; }
-    public DateTime SignedAt = RecifeTimeProvider.Now();
+
+    public string SignerId { get; set; }
+
+    public DateTime SignedAt { get; set; }
+
     public string Algorithm { get; set; }
-    public string SignatureHash { get; set; }
-}
-public interface ISignatureMetadata
-{
-    Task<byte[]> GenerateMetadataPageAsync(SignatureMetadata metadata);
+
+    public string SignatureValue { get; set; }
+
+    public string PublicKey { get; set; }
+
+    public string HashAlgorithm { get; set; }
+
+    public string DocumentHash { get; set; }
 }

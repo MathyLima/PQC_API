@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PQC.MODULES.Documents.Domain.Entities;
 using PQC.MODULES.Documents.Domain.Interfaces.Persistence;
+using System.Reflection.Metadata;
 
 namespace PQC.MODULES.Documents.Infraestructure.Repositories
 {
@@ -13,6 +14,11 @@ namespace PQC.MODULES.Documents.Infraestructure.Repositories
             _context = context;
         }
 
+        public async Task<StoredDocument> GetByDocumentIdAsync(string documentId)
+        {
+            return await _context.Documentos
+                .FirstOrDefaultAsync(d => d.Id == documentId);
+        }
         public async Task<StoredDocument?> GetByIdAsync(string id)
         {
             return await _context.Documentos.FindAsync(id);
@@ -35,8 +41,8 @@ namespace PQC.MODULES.Documents.Infraestructure.Repositories
                 .Include(d => d.Usuario) // Aqui depende se Usuario também tem interface
                 .FirstOrDefaultAsync(d =>
                     d.Usuario.Cpf == cpf &&
-                    d.Assinado_em >= minTime &&
-                    d.Assinado_em <= maxTime);
+                    d.AssinadoEm >= minTime &&
+                    d.AssinadoEm <= maxTime);
         }
 
         public async Task SaveChangesAsync()

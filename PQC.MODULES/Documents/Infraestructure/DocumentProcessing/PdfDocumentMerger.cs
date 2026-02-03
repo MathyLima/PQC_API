@@ -1,11 +1,12 @@
-﻿using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
-using PdfSharp.Pdf.Advanced;
-using System.Text;
+﻿using iText.Kernel.Pdf;
 using PQC.MODULES.Documents.Application.Interfaces.PDFcomposer;
+using System.Text;
 
 namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
 {
+    /// <summary>
+    /// Responsável por unir páginas e persistir XMP
+    /// </summary>
     public class PdfDocumentMerger : IDocumentMerger
     {
         private readonly IXmpMetaDataService _xmpService;
@@ -15,80 +16,96 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
             _xmpService = xmpService;
         }
 
-        public async Task<byte[]> MergeAsync(
+        public Task<byte[]> MergeAsync(
             byte[] originalPdf,
             byte[] metadataPdf,
             SignatureMetadata signatureMetadata)
         {
-            if (originalPdf == null || originalPdf.Length == 0)
-                throw new ArgumentException("Original PDF is empty");
-            if (metadataPdf == null || metadataPdf.Length == 0)
-                throw new ArgumentException("Metadata PDF is empty");
+            Console.WriteLine("\n🔧 CRIANDO PDF COM XMP CUSTOMIZADO");
+
+            // 1️⃣ Extrair XMP do original (se existir)
+            string existingXmp = ExtractXmpFromSource(originalPdf);
 
             using var outputMs = new MemoryStream();
-            var outputDoc = new PdfDocument();
+            using var pdfWriter = new PdfWriter(outputMs);
+            using var pdfDoc = new PdfDocument(pdfWriter);
 
-            // Documento original
-            using var originalMs = new MemoryStream(originalPdf);
-            var originalDoc = PdfReader.Open(originalMs, PdfDocumentOpenMode.Import);
+            // 2️⃣ Copiar páginas originais
+            CopyPages(originalPdf, pdfDoc);
 
-            // EXTRAIR XMP EXISTENTE AQUI MESMO
-            string existingXmp = GetXmpMetadata(originalDoc);
+            // 3️⃣ Copiar páginas de metadata
+            CopyPages(metadataPdf, pdfDoc);
 
-            // Documento de metadata
-            using var metadataMs = new MemoryStream(metadataPdf);
-            var metadataDoc = PdfReader.Open(metadataMs, PdfDocumentOpenMode.Import);
+            // 4️⃣ Gerar XMP atualizado
+            string customXmp = _xmpService.GenerateXmpMetadata(
+                signatureMetadata,
+                Convert.ToBase64String(Encoding.UTF8.GetBytes(signatureMetadata.SignatureValue)), // ← adiciona a signature
+                existingXmp
+            );
+            // 5️⃣ Injetar XMP final
+            CustomXmpHandler.InjectCustomXmp(pdfDoc, customXmp);
 
-            // Copiar todas as páginas
-            foreach (PdfPage page in originalDoc.Pages)
-                outputDoc.AddPage(page);
+            // 6️⃣ Metadata básico do PDF
+            ConfigurePdfInfo(pdfDoc, signatureMetadata);
 
-            foreach (PdfPage page in metadataDoc.Pages)
-                outputDoc.AddPage(page);
+            pdfDoc.Close();
 
-            // GERAR XMP COMPLETO (novo ou append)
-            string finalXmp = _xmpService.GenerateXmpMetadata(signatureMetadata, existingXmp);
-
-            // SETAR XMP NO PDF FINAL
-            SetXmpMetadata(outputDoc, finalXmp);
-
-            outputDoc.Save(outputMs);
-            return outputMs.ToArray();
+            return Task.FromResult(outputMs.ToArray());
         }
 
-        private string GetXmpMetadata(PdfDocument doc)
+        // =========================
+        // Helpers
+        // =========================
+
+        private static void CopyPages(byte[] sourcePdf, PdfDocument targetDoc)
+        {
+            using var ms = new MemoryStream(sourcePdf);
+            using var reader = new PdfReader(ms);
+            using var sourceDoc = new PdfDocument(reader);
+
+            sourceDoc.CopyPagesTo(
+                1,
+                sourceDoc.GetNumberOfPages(),
+                targetDoc
+            );
+        }
+
+        private static string ExtractXmpFromSource(byte[] pdfBytes)
         {
             try
             {
-                var catalog = doc.Internals.Catalog;
-                if (catalog.Elements.ContainsKey("/Metadata"))
-                {
-                    var metadataRef = catalog.Elements["/Metadata"] as PdfReference;
-                    if (metadataRef != null)
-                    {
-                        var metadataObj = metadataRef.Value as PdfDictionary;
-                        if (metadataObj?.Stream != null)
-                        {
-                            return Encoding.UTF8.GetString(metadataObj.Stream.Value);
-                        }
-                    }
-                }
-            }
-            catch { }
+                using var ms = new MemoryStream(pdfBytes);
+                using var reader = new PdfReader(ms);
+                using var doc = new PdfDocument(reader);
 
-            return string.Empty;
+                byte[] xmp = doc.GetXmpMetadata();
+
+                if (xmp == null || xmp.Length == 0)
+                    return string.Empty;
+
+                return Encoding.UTF8.GetString(xmp);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Falha ao extrair XMP: {ex.Message}");
+                return string.Empty;
+            }
         }
 
-        private void SetXmpMetadata(PdfDocument doc, string xmpXml)
+        private static void ConfigurePdfInfo(
+            PdfDocument doc,
+            SignatureMetadata metadata)
         {
-            var xmpStream = new PdfDictionary(doc);
-            xmpStream.Elements["/Type"] = new PdfName("/Metadata");
-            xmpStream.Elements["/Subtype"] = new PdfName("/XML");
+            var info = doc.GetDocumentInfo();
 
-            byte[] xmpBytes = Encoding.UTF8.GetBytes(xmpXml);
-            xmpStream.CreateStream(xmpBytes);
+            info.SetCreator("PQC Signature Engine");
+            info.SetProducer("PQC Documents");
 
-            doc.Internals.Catalog.Elements["/Metadata"] = xmpStream;
+            info.SetMoreInfo("DocumentId", metadata.DocumentId);
+            info.SetMoreInfo("SignedBy", metadata.SignerName);
+            info.SetMoreInfo("SignedAt", metadata.SignedAt.ToString("O"));
+
+            doc.GetCatalog().SetLang(new PdfString("pt-BR"));
         }
     }
 }

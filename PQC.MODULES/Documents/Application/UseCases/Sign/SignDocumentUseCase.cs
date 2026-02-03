@@ -1,5 +1,6 @@
 ﻿namespace PQC.MODULES.Documents.Application.UseCases.Sign
 {
+    using iText.Kernel.Pdf;
     using Microsoft.Extensions.Logging;
     using PQC.MODULES.Documents.Application.DTOs;
     using PQC.MODULES.Documents.Application.Interfaces.PDFcomposer;
@@ -7,15 +8,15 @@
     using PQC.MODULES.Documents.Domain.Entities;
     using PQC.MODULES.Documents.Domain.Interfaces;
     using PQC.MODULES.Documents.Infraestructure.Repositories;
+    using PQC.MODULES.Documents.Infraestructure.DocumentProcessing;
     using PQC.MODULES.Users.Domain.Entities;
     using PQC.SHARED.Communication.DTOs.Documents.Responses;
     using PQC.SHARED.Communication.Interfaces;
     using PQC.SHARED.Exceptions.Domain;
+    using PQC.SHARED.Time;
+    using System.Security.Cryptography;
+    using System.Text;
 
-
-    /// <summary>
-    /// Use Case para assinar um documento usando criptografia pós-quântica.
-    /// </summary>
     public class SignDocumentUseCase
     {
         private readonly IDocumentRepository _documentRepository;
@@ -44,104 +45,232 @@
             _currentUserService = currentUserService;
             _logger = logger;
             _userRepository = userRepository;
-            _keyReader = keyReader;  // ← ADICIONE ISSO
+            _keyReader = keyReader;
         }
 
         public async Task<SignDocumentResponse> Execute(DocumentUploadRequest request)
         {
-            _logger.LogInformation("Starting document signing process");
+            _logger.LogInformation("🚀 Starting document signing process");
 
-            // Verifica se o usuário está autenticado
             var user = await AuthenticateUser(request.UserId);
-
-            // Recuperar a chave privada do usuário
-            // Mantém a interface retornando bytes
-            var privateKey = await _keyReader.GetPrivateKeyAsync(user.Id.ToString());
-            _logger.LogInformation("Private key retrieved successfully");
-            // NativePostQuantumSigner salva temporariamente e chama a CLI
-            var digitalSignature = await _signatureService.SignAsync(
-                request.Content,
-                privateKey
-            );
-            _logger.LogInformation("Document signed successfully using post-quantum algorithm");
             var documentId = Guid.NewGuid().ToString();
 
-            // Criar metadados da assinatura
+            // ========================================
+            // 1. Extrai XMP ANTES de normalizar
+            //    (se o PDF já foi assinado anteriormente, o XMP pode ser perdido na normalização)
+            // ========================================
+            _logger.LogInformation("📄 Extraindo XMP existente antes de normalizar...");
+            string existingXmp = ExtractExistingXmp(request.Content);
+
+            if (!string.IsNullOrEmpty(existingXmp))
+            {
+                _logger.LogInformation($"📄 XMP existente encontrado ({existingXmp.Length} chars) — será preservado");
+            }
+            else
+            {
+                _logger.LogInformation("📄 Sem XMP existente — primeira assinatura");
+            }
+
+            // ========================================
+            // 2. Normalização
+            // ========================================
+            _logger.LogInformation("📄 Normalizando PDF...");
+            var normalizedPdf = await _documentComposer.NormalizePdfAsync(request.Content);
+            _logger.LogInformation($"📄 PDF normalizado: {normalizedPdf.Length} bytes");
+
+            // ========================================
+            // 3. Hash do PDF normalizado
+            // ========================================
+            var hashBytes = SHA256.HashData(normalizedPdf);
+            var hashBase64 = Convert.ToBase64String(hashBytes);
+            _logger.LogInformation($"📄 Original PDF Hash: {hashBase64}");
+
+            // ========================================
+            // 4. SALVA O PDF ORIGINAL (sem sufixo)
+            // ========================================
+            _logger.LogInformation("💾 Salvando PDF original (sem assinatura)...");
+            var originalReference = await _storageService.SaveFileAsync(
+                normalizedPdf,
+                request.FileName,
+                request.ContentType,
+                user.Id
+            );
+            _logger.LogInformation($"💾 PDF original salvo em: {originalReference}");
+
+            // ========================================
+            // 5. Recupera chaves
+            // ========================================
+            var privateKey = await _keyReader.GetPrivateKeyAsync(user.Id.ToString());
+            var publicKeyPemBytes = await _keyReader.GetPublicKeyAsync(user.Id.ToString());
+
+            // ========================================
+            // 6. Assina o HASH
+            // ========================================
+            var signatureResult = await _signatureService.SignAsync(hashBytes, privateKey);
+            _logger.LogInformation("✍️ Hash signed successfully");
+
+            // ========================================
+            // 7. Metadata
+            // ========================================
             var metadata = new SignatureMetadata
             {
                 DocumentId = documentId,
                 DocumentName = request.FileName,
+                SignerId = user.Id.ToString(),
                 SignerName = user.Nome,
                 SignerEmail = user.Email,
-                SignerCpf = user.Cpf,
-                Algorithm = digitalSignature.Algorithm,
-                SignatureHash = Convert.ToBase64String(digitalSignature.Signature)
+                DocumentHash = hashBase64,
+                HashAlgorithm = "SHA-256",
+                SignatureValue = Convert.ToBase64String(signatureResult.Signature),
+                Algorithm = signatureResult.Algorithm,
+                PublicKey = Convert.ToBase64String(publicKeyPemBytes),
+                SignedAt = RecifeTimeProvider.Now()
             };
 
-            // Mesclar a assinatura no documento PDF
-            var signedDocumentContent = await _documentComposer.ComposeForSignatureAsync(
-                request.Content,
-                metadata);
-            _logger.LogInformation("Signature merged into document successfully");
+            // ========================================
+            // 8. Gera PDF assinado (em memória)
+            // ========================================
+            _logger.LogInformation("📝 Gerando PDF assinado...");
 
-            // Armazenar o documento assinado
-            var documentReference = await _storageService.SaveFileAsync(
-                signedDocumentContent,
-                request.FileName,
+            // Re-injeta o XMP no PDF normalizado ANTES de adicionar a página de metadata
+            // Assim o AddMetadataPageAsync vai encontrar o XMP e preservar
+            var pdfWithXmp = normalizedPdf;
+            if (!string.IsNullOrEmpty(existingXmp))
+            {
+                pdfWithXmp = ReInjectXmp(normalizedPdf, existingXmp);
+                _logger.LogInformation("📝 XMP re-injetado no PDF normalizado");
+            }
+
+            var pdfWithMetadata = await _documentComposer.AddMetadataPageAsync(
+                pdfWithXmp,
+                metadata
+            );
+
+            var signedPdf = await _documentComposer.AddXmpSignatureAsync(
+                pdfWithMetadata,
+                signatureResult.Signature,
+                metadata
+            );
+
+            _logger.LogInformation($"📝 PDF assinado gerado: {signedPdf.Length} bytes");
+
+            // ========================================
+            // 9. SALVA O PDF ASSINADO COM SUFIXO _signed
+            // ========================================
+            _logger.LogInformation("💾 Salvando PDF assinado...");
+
+            var signedFileName = AddSignedSuffix(request.FileName);
+
+            var signedReference = await _storageService.SaveFileAsync(
+                signedPdf,
+                signedFileName,
                 request.ContentType,
-                user.Id);
+                user.Id
+            );
 
-            // Salvar os metadados do documento no repositório
-            var documentoAssinado = StoredDocument.CreateSigned(
+            _logger.LogInformation($"💾 PDF assinado salvo em: {signedReference}");
+
+            // ========================================
+            // 10. Persistência no banco
+            // ========================================
+            var document = StoredDocument.CreateSigned(
                 documentId,
-                documentReference,
+                originalReference,
+                signedReference,
+                normalizedPdf,
+                hashBase64,
                 request.FileName,
                 user.Id.ToString(),
                 request.ContentType!,
-                digitalSignature.Algorithm,
-                signedDocumentContent.Length,
-                metadata.SignatureHash,
-                DateTime.UtcNow
+                metadata.Algorithm,
+                metadata.SignatureValue,
+                metadata.PublicKey,
+                metadata.SignedAt,
+                signedPdf.Length
             );
-            await _documentRepository.AddAsync(documentoAssinado);
+
+            await _documentRepository.AddAsync(document);
             await _documentRepository.SaveChangesAsync();
-            _logger.LogInformation("Document signing process completed successfully");
+
+            _logger.LogInformation("✅ Document successfully signed");
 
             return new SignDocumentResponse
             {
                 DocumentId = Guid.Parse(documentId),
                 DocumentName = request.FileName,
-                SignedContent = signedDocumentContent,
+                SignedContent = signedPdf,
                 ContentType = request.ContentType!,
-                Algorithm = digitalSignature.Algorithm,
-                FileSize = signedDocumentContent.Length,
-                SignedAt = DateTime.UtcNow
+                Algorithm = metadata.Algorithm,
+                FileSize = signedPdf.Length,
+                SignedAt = metadata.SignedAt
             };
+        }
+
+        // ========================================
+        // HELPERS
+        // ========================================
+
+        /// <summary>
+        /// Extrai o XMP customizado do PDF sem modificá-lo
+        /// </summary>
+        private string ExtractExistingXmp(byte[] pdfContent)
+        {
+            try
+            {
+                using var ms = new MemoryStream(pdfContent);
+                using var reader = new PdfReader(ms);
+                using var doc = new PdfDocument(reader);
+                return CustomXmpHandler.ExtractCustomXmp(doc);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"⚠️ Falha ao extrair XMP: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Re-injeta o XMP customizado em um PDF
+        /// </summary>
+        private byte[] ReInjectXmp(byte[] pdfContent, string xmpContent)
+        {
+            using var inputMs = new MemoryStream(pdfContent);
+            using var outputMs = new MemoryStream();
+            using var reader = new PdfReader(inputMs);
+            using var writer = new PdfWriter(outputMs);
+            using var doc = new PdfDocument(reader, writer);
+
+            CustomXmpHandler.InjectCustomXmp(doc, xmpContent);
+            doc.Close();
+
+            return outputMs.ToArray();
+        }
+
+        /// <summary>
+        /// Adiciona o sufixo "_signed" antes da extensão do arquivo
+        /// </summary>
+        private string AddSignedSuffix(string fileName)
+        {
+            var extension = Path.GetExtension(fileName);
+            var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+            return $"{nameWithoutExtension}_signed{extension}";
         }
 
         private async Task<User> AuthenticateUser(string userId)
         {
-           // var userId = _currentUserService.GetUserId();
-            //if (userId == Guid.Empty)
-            //{
-              //  throw new UnauthorizedAccessException("User not authenticated");
-            //}
-            //Resgatar usuário
             var user = await _userRepository.GetByIdAsync(userId.ToString());
             if (user == null)
             {
                 throw new EntityNotFoundException("User not found");
             }
-            return new User {
+
+            return new User
+            {
                 Cpf = user.Cpf,
                 Nome = user.Nome,
                 Email = user.Email,
                 Id = user.Id
             };
         }
-
     }
-
-
-
 }

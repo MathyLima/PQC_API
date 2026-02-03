@@ -74,7 +74,7 @@ public class PdfMetadataPageGenerator : ISignatureMetadataPageGenerator
         yPosition += 20;
 
         gfx.DrawString(
-            $"Assinado em: {metadata.SignedAt:dd/MM/yyyy HH:mm:ss} UTC",
+            $"Assinado em: {metadata.SignedAt:yyyy-MM-dd HH:mm:ss} UTC",
             normalFont,
             XBrushes.Black,
             new XRect(Margin, yPosition, ContentWidth, 20),
@@ -119,10 +119,6 @@ public class PdfMetadataPageGenerator : ISignatureMetadataPageGenerator
         // Nome
         yPosition = DrawLabelValue(gfx, "Nome:", metadata.SignerName, labelFont, normalFont, yPosition, lineHeight);
 
-
-        // CPF
-        yPosition = DrawLabelValue(gfx, "CPF:", MaskCpf(metadata.SignerCpf), labelFont, normalFont, yPosition, lineHeight);
-
         // Email
         yPosition = DrawLabelValue(gfx, "Email:", metadata.SignerEmail, labelFont, normalFont, yPosition, lineHeight);
 
@@ -150,7 +146,7 @@ public class PdfMetadataPageGenerator : ISignatureMetadataPageGenerator
         yPosition += lineHeight;
 
         // Quebra o hash em múltiplas linhas
-        yPosition = DrawWrappedText(gfx, metadata.SignatureHash, monoFont, yPosition);
+        yPosition = DrawWrappedText(gfx, metadata.SignatureValue, monoFont, yPosition);
 
         return yPosition + 15;
     }

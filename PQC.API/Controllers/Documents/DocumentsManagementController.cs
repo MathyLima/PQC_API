@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PQC.API.Models;
 using PQC.MODULES.Documents.Application.DTOs;
 using PQC.MODULES.Documents.Application.UseCases.Sign;
+using PQC.MODULES.Documents.Application.UseCases.Validation;
 
 namespace PQC.API.Controllers.Documents
 {
@@ -12,15 +13,15 @@ namespace PQC.API.Controllers.Documents
     {
      
             private readonly SignDocumentUseCase _signDocumentUseCase;
-           // private readonly ValidateDocumentUseCase _validateDocumentUseCase;
+            private readonly ValidateDocumentUseCase _validateDocumentUseCase;
 
         public DocumentsController(
-                SignDocumentUseCase signDocumentUseCase
-              //  ValidateDocumentUseCase validateUseCase
+                SignDocumentUseCase signDocumentUseCase,
+                ValidateDocumentUseCase validateUseCase
               )
             {
                 _signDocumentUseCase = signDocumentUseCase;
-                //_validateDocumentUseCase = validateUseCase;
+                _validateDocumentUseCase = validateUseCase;
         }
 
         [HttpPost("sign")]
@@ -56,6 +57,24 @@ namespace PQC.API.Controllers.Documents
             );
         }
 
+        [HttpPost("verify")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> VerifyDocument([FromForm] VerifyDocumentRequestJson request)
+        {
+            if (request.File == null || request.File.Length == 0)
+                return BadRequest("Nenhum arquivo foi enviado");
+
+            byte[] content;
+            using (var ms = new MemoryStream())
+            {
+                await request.File.CopyToAsync(ms);
+                content = ms.ToArray();
+            }
+
+            var response = await _validateDocumentUseCase.Execute(content);
+
+            return Ok(response);
+        }
         /*
         [HttpGet]
         [ProducesResponseType(typeof(DocumentListResponseJson), StatusCodes.Status200OK)]

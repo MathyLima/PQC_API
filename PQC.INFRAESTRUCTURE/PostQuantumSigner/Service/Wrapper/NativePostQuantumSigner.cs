@@ -1,10 +1,7 @@
 ﻿using PQC.MODULES.Documents.Application.Interfaces.PQCsigner;
 using PQC.SHARED.Communication.Interfaces.PQC.SHARED.Interfaces;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
 {
@@ -19,13 +16,12 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
              string pqcCliPath,
              ISecureFileStorage fileStorage
          )
-                {
-                    _pqcCliPath = Path.Combine(AppContext.BaseDirectory, pqcCliPath);
-                    _fileStorage = fileStorage;
+        {
+            _pqcCliPath = Path.Combine(AppContext.BaseDirectory, pqcCliPath);
+            _fileStorage = fileStorage;
 
-                    EnsureTempDirectories();
-                }
-
+            EnsureTempDirectories();
+        }
 
         public async Task<SignatureResult> SignAsync(byte[] data, byte[] privateKey)
         {
@@ -55,14 +51,18 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
                     throw new Exception("Signature file was not generated");
                 }
 
-                // Ler assinatura
-                var signature = await _fileStorage.GetAsync(sigPath);
-                var detectedAlgorithm = DetectAlgorithmFromOutput(stdout) ?? "ML-DSA-65";
+                // Ler arquivo .sig da CLI
+                var signatureFileContent = await _fileStorage.GetAsync(sigPath);
+
+                // 🔥 PARSEAR O ARQUIVO .sig E EXTRAIR APENAS OS BYTES DA ASSINATURA
+                var (algorithm, signatureBytes) = ParseSignatureFile(signatureFileContent);
+
+                Console.WriteLine($"✍️ Signature parsed: {signatureBytes.Length} bytes, Algorithm: {algorithm}");
 
                 return new SignatureResult
                 {
-                    Signature = signature,
-                    Algorithm = detectedAlgorithm
+                    Signature = signatureBytes, // ← Bytes puros da assinatura
+                    Algorithm = algorithm
                 };
             }
             finally
@@ -71,6 +71,11 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
             }
         }
 
+        /// <summary>
+        /// Verifica uma assinatura PQC.
+        /// publicKey aqui recebe os bytes do PEM ORIGINAL gerado pela CLI
+        /// (não bytes puros da chave — já é o conteúdo literal do arquivo .pub)
+        /// </summary>
         public async Task<bool> VerifyAsync(byte[] data, byte[] signature, byte[] publicKey)
         {
             var tempPrefix = Path.Combine(
@@ -84,16 +89,46 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
 
             try
             {
-                // Salva dados, assinatura e chave pública
+                // ✅ CORREÇÃO: publicKey já é o PEM original em bytes
+                // Não precisa detectar algoritmo nem reconstruir PEM
+                var pemPublicKey = Encoding.UTF8.GetString(publicKey);
+                Console.WriteLine($"🔍 Using PEM public key directly from storage");
+                Console.WriteLine($"   PEM preview: {pemPublicKey.Substring(0, Math.Min(60, pemPublicKey.Length))}...");
+
+                // 🔥 RECONSTRUIR O ARQUIVO .sig NO FORMATO ESPERADO PELA CLI
+                // Detecta algoritmo a partir do PEM para montar o .sig
+                var algorithm = DetectAlgorithmFromPem(pemPublicKey);
+                Console.WriteLine($"   Algorithm detected from PEM: {algorithm}");
+
+                var signatureFileContent = CreateSignatureFile(signature, algorithm);
+
+                // Salva dados, assinatura e chave pública (PEM original diretamente)
                 var fullDataPath = await _fileStorage.SaveAsync(dataPath, data);
-                var fullSigPath = await _fileStorage.SaveAsync(sigPath, signature);
+                var fullSigPath = await _fileStorage.SaveAsync(sigPath, signatureFileContent);
+                // ✅ CORREÇÃO: salva o PEM original como está, sem reconstruir
                 var fullKeyPath = await _fileStorage.SaveAsync(keyPath, publicKey);
+
+                Console.WriteLine($"🔍 Verifying with:");
+                Console.WriteLine($"   Data: {data.Length} bytes");
+                Console.WriteLine($"   Signature: {signature.Length} bytes");
+                Console.WriteLine($"   Public key (PEM): {publicKey.Length} bytes");
+                Console.WriteLine($"   Algorithm: {algorithm}");
 
                 // Executar CLI
                 var arguments = BuildVerifyArguments(fullDataPath, fullSigPath, fullKeyPath);
                 var (exitCode, stdout, stderr) = await ExecutePqcCliAsync(arguments, throwOnError: false);
 
-                // Verificação bem-sucedida se exitCode == 0
+                if (exitCode == 0)
+                {
+                    Console.WriteLine("✅ CLI verification PASSED");
+                }
+                else
+                {
+                    Console.WriteLine($"❌ CLI verification FAILED");
+                    Console.WriteLine($"   stdout: {stdout}");
+                    Console.WriteLine($"   stderr: {stderr}");
+                }
+
                 return exitCode == 0;
             }
             finally
@@ -104,7 +139,6 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
 
         public async Task<(byte[] publicKey, byte[] privateKey)> GenerateKeyPairAsync(string algorithm)
         {
-            // Diretório temporário para gerar as chaves
             var tempPrefix = Path.Combine(
                 BASE_TEMP_DIR,
                 TEMP_SIGN_DIR,
@@ -115,7 +149,6 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
 
             try
             {
-                // Obter caminhos completos no storage temporário
                 var fullPubPath = _fileStorage.GetFullPath(publicKeyPath);
                 var fullKeyPath = _fileStorage.GetFullPath(privateKeyPath);
 
@@ -130,7 +163,7 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
                     throw new Exception("Key files were not generated in temporary storage");
                 }
 
-                // Ler os bytes das chaves
+                // Ler os bytes das chaves (retorna bytes literais dos arquivos .pub e .priv da CLI)
                 var publicKeyBytes = await _fileStorage.GetAsync(publicKeyPath);
                 var privateKeyBytes = await _fileStorage.GetAsync(privateKeyPath);
 
@@ -146,7 +179,118 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
             }
         }
 
+        /// <summary>
+        /// Detecta o algoritmo ML-DSA a partir do header do PEM
+        /// </summary>
+        private string DetectAlgorithmFromPem(string pem)
+        {
+            if (pem.Contains("ML-DSA-87"))
+                return "ML-DSA-87";
+            if (pem.Contains("ML-DSA-65"))
+                return "ML-DSA-65";
+            if (pem.Contains("ML-DSA-44"))
+                return "ML-DSA-44";
 
+            // Fallback: nunca deveria cair aqui se o PEM for válido
+            throw new Exception($"Algoritmo não detectado no PEM. Conteúdo: {pem.Substring(0, Math.Min(100, pem.Length))}");
+        }
+
+        /// <summary>
+        /// Parse o arquivo .sig da CLI e extrai o algoritmo e os bytes da assinatura
+        /// Formato esperado:
+        /// [ALGORITHM]
+        /// ML-DSA-44
+        /// 
+        /// [SIGNATURE]
+        /// <base64_signature>
+        /// </summary>
+        private (string algorithm, byte[] signature) ParseSignatureFile(byte[] signatureFile)
+        {
+            var content = Encoding.UTF8.GetString(signatureFile);
+            var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            string? algorithm = null;
+            bool inAlgorithmSection = false;
+            bool inSignatureSection = false;
+            var base64Lines = new List<string>();
+
+            foreach (var line in lines)
+            {
+                var trimmedLine = line.Trim();
+
+                if (trimmedLine == "[ALGORITHM]")
+                {
+                    inAlgorithmSection = true;
+                    inSignatureSection = false;
+                    continue;
+                }
+                else if (trimmedLine == "[SIGNATURE]")
+                {
+                    inAlgorithmSection = false;
+                    inSignatureSection = true;
+                    continue;
+                }
+                else if (trimmedLine.StartsWith("["))
+                {
+                    inAlgorithmSection = false;
+                    inSignatureSection = false;
+                    continue;
+                }
+
+                if (inAlgorithmSection && !string.IsNullOrWhiteSpace(trimmedLine))
+                {
+                    algorithm = trimmedLine;
+                }
+                else if (inSignatureSection && !string.IsNullOrWhiteSpace(trimmedLine))
+                {
+                    base64Lines.Add(trimmedLine);
+                }
+            }
+
+            if (algorithm == null)
+            {
+                throw new Exception("Algorithm not found in .sig file");
+            }
+
+            if (base64Lines.Count == 0)
+            {
+                throw new Exception("Signature not found in .sig file");
+            }
+
+            var base64Signature = string.Join("", base64Lines);
+
+            Console.WriteLine($"📝 Parsed from .sig file:");
+            Console.WriteLine($"   Algorithm: {algorithm}");
+            Console.WriteLine($"   Base64 length: {base64Signature.Length} chars");
+
+            var signatureBytes = Convert.FromBase64String(base64Signature);
+
+            Console.WriteLine($"   Signature bytes: {signatureBytes.Length}");
+
+            return (algorithm, signatureBytes);
+        }
+
+        /// <summary>
+        /// Cria o conteúdo do arquivo .sig no formato esperado pela CLI
+        /// </summary>
+        private byte[] CreateSignatureFile(byte[] signatureBytes, string algorithm)
+        {
+            var base64Signature = Convert.ToBase64String(signatureBytes);
+
+            var content = $@"[ALGORITHM]
+{algorithm}
+
+[SIGNATURE]
+{base64Signature}
+";
+
+            Console.WriteLine($"📝 Creating .sig file:");
+            Console.WriteLine($"   Algorithm: {algorithm}");
+            Console.WriteLine($"   Signature bytes: {signatureBytes.Length}");
+            Console.WriteLine($"   Base64 length: {base64Signature.Length} chars");
+
+            return Encoding.UTF8.GetBytes(content);
+        }
 
         private void EnsureTempDirectories()
         {
@@ -156,7 +300,6 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
             Directory.CreateDirectory(baseDir);
             Directory.CreateDirectory(signDir);
         }
-
 
         private string BuildSignArguments(
             string inputFile,
@@ -242,21 +385,6 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
         }
 
         /// <summary>
-        /// Detecta o algoritmo do output da CLI
-        /// </summary>
-        private string? DetectAlgorithmFromOutput(string cliOutput)
-        {
-            if (string.IsNullOrWhiteSpace(cliOutput))
-                return null;
-
-            if (cliOutput.Contains("ML-DSA-87")) return "ML-DSA-87";
-            if (cliOutput.Contains("ML-DSA-65")) return "ML-DSA-65";
-            if (cliOutput.Contains("ML-DSA-44")) return "ML-DSA-44";
-
-            return null;
-        }
-
-        /// <summary>
         /// Limpa arquivos temporários
         /// </summary>
         private async Task CleanupTempFilesAsync(params string[] paths)
@@ -272,7 +400,6 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
                 }
                 catch (Exception ex)
                 {
-                    // Log mas não falha - arquivos temporários
                     Console.WriteLine($"Warning: Failed to delete temp file {path}: {ex.Message}");
                 }
             }

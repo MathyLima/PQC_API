@@ -101,8 +101,22 @@ namespace PQC.INFRAESTRUCTURE.Data
                     .HasMaxLength(36)
                     .IsRequired();
 
-                entity.Property(e => e.Path)
-                    .HasColumnName("path")
+                entity.Property(e => e.OriginalPath)
+                    .HasColumnName("original_path")
+                    .HasMaxLength(500)
+                    .IsRequired();
+
+                entity.Property(e => e.SignedPath)
+                    .HasColumnName("signed_path")
+                    .HasMaxLength(500)
+                    .IsRequired();
+
+                entity.Property(e => e.OriginalPdfBytes)
+                    .HasColumnName("original_pdf_bytes")
+                    .IsRequired();
+
+                entity.Property(e => e.OriginalHash)
+                    .HasColumnName("original_hash")
                     .HasMaxLength(500)
                     .IsRequired();
 
@@ -116,14 +130,14 @@ namespace PQC.INFRAESTRUCTURE.Data
                     .HasMaxLength(36)
                     .IsRequired();
 
-                entity.Property(e => e.Assinado_em)
+                entity.Property(e => e.AssinadoEm)
                     .HasColumnName("assinado_em")
                     .IsRequired();
-              
+
                 entity.Property(e => e.TipoArquivo)
                     .HasColumnName("tipo_arquivo")
                     .IsRequired();
-                
+
                 entity.Property(e => e.AssinaturaDigital)
                     .HasColumnName("assinatura")
                     .IsRequired();
@@ -134,23 +148,28 @@ namespace PQC.INFRAESTRUCTURE.Data
                     .HasConversion<string>()
                     .IsRequired();
 
+                entity.Property(e => e.ChavePublicaUsada)
+                    .HasColumnName("chave_publica_usada")
+                    .IsRequired();
+
                 entity.Property(e => e.Tamanho)
                     .HasColumnName("tamanho")
                     .IsRequired();
 
-
-                // Relacionamento: 1 Usuario -> N Documentos
-                entity.HasOne(d => d.Usuario)   
-                  .WithMany(u => u.Documentos)
-                  .HasForeignKey(d => d.IdUsuario)
-                  .OnDelete(DeleteBehavior.Restrict);
+                // Relacionamento
+                entity.HasOne(d => d.Usuario)
+                    .WithMany(u => u.Documentos)
+                    .HasForeignKey(d => d.IdUsuario)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 // Índices
                 entity.HasIndex(e => e.IdUsuario);
-                entity.HasIndex(e => e.Assinado_em);
+                entity.HasIndex(e => e.AssinadoEm);
+                entity.HasIndex(e => e.OriginalHash);
             });
 
-           
+
+
         }
     }
 }
