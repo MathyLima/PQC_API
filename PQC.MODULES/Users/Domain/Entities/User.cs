@@ -12,6 +12,17 @@ namespace PQC.MODULES.Users.Domain.Entities
         public string? Telefone { get; set; }
         public string Login { get; set; }
         public string Senha { get; set; }
+
+        //Endereço
+        public string? Cep { get; set; }
+        public string? Logradouro { get; set; }
+        public string? Numero { get; set; }
+        public string? Complemento { get; set; }
+        public string? Bairro { get; set; }
+        public string? Cidade { get; set; }
+        public string? Estado { get; set; }
+        public string? Pais { get; set; }
+
         public string? PublicKeyReference { get; set; }   // Pode ser: caminho, ID do vault, etc
         public string? PrivateKeyReference { get; set; }  // Depende da implementação
         public SignatureAlgorithm AlgoritmoAssinatura { get; set; }

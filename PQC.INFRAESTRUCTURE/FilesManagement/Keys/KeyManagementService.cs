@@ -91,12 +91,12 @@ namespace PQC.INFRAESTRUCTURE.FilesManagement.Keys
         // Helpers privados
         private string GetPublicKeyPath(string userId)
         {
-            return $"{KEYS_BASE_PATH}/{userId}/public.key";
+            return $"{KEYS_BASE_PATH}/{userId}/public.pub";
         }
 
         private string GetPrivateKeyPath(string userId)
         {
-            return $"{KEYS_BASE_PATH}/{userId}/private.key";
+            return $"{KEYS_BASE_PATH}/{userId}/private.priv";
         }
     }
 }

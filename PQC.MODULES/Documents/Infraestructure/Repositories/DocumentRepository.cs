@@ -38,7 +38,7 @@ namespace PQC.MODULES.Documents.Infraestructure.Repositories
             var maxTime = signedAt.Add(tolerance);
 
             return await _context.Documentos
-                .Include(d => d.Usuario) // Aqui depende se Usuario também tem interface
+                .Include(d => d.Usuario) 
                 .FirstOrDefaultAsync(d =>
                     d.Usuario.Cpf == cpf &&
                     d.AssinadoEm >= minTime &&
@@ -52,7 +52,7 @@ namespace PQC.MODULES.Documents.Infraestructure.Repositories
 
         public async Task AddAsync(StoredDocument document)
         {
-            await _context.Documentos.AddAsync(document);
+           //x await _context.Documentos.AddAsync(document);
         }
     }
 }

@@ -1,355 +1,267 @@
-﻿using iText.Kernel.Pdf;
-using PQC.MODULES.Documents.Application.Interfaces.PDFcomposer;
-using PQC.MODULES.Documents.Application.Interfaces.PQCsigner;
-using PQC.MODULES.Documents.Domain.Entities;
-using PQC.MODULES.Documents.Infraestructure.DocumentProcessing;
+﻿using PQC.MODULES.Documents.Application.Interfaces.PQCsigner;
 using PQC.MODULES.Documents.Infraestructure.Repositories;
-using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PQC.MODULES.Documents.Application.UseCases.Validation
 {
     public class ValidateDocumentUseCase
     {
         private readonly IDocumentRepository _repository;
-        private readonly IXmpMetadataExtractor _metadataExtractor;
         private readonly INativePostQuantumSigner _pqcSigner;
-        private readonly IDocumentComposer _documentComposer;
 
         public ValidateDocumentUseCase(
             IDocumentRepository repository,
-            IXmpMetadataExtractor metadataExtractor,
-            INativePostQuantumSigner pqcSigner,
-            IDocumentComposer documentComposer)
+            INativePostQuantumSigner pqcSigner)
         {
             _repository = repository;
-            _metadataExtractor = metadataExtractor;
             _pqcSigner = pqcSigner;
-            _documentComposer = documentComposer;
         }
 
-        public async Task<DocumentValidationResult> Execute(byte[] pdfContent)
+        public async Task<DocumentValidationResult> Execute(string javaSignaturesJson)
         {
             Console.WriteLine("\n══════════════════════════════════════════════");
             Console.WriteLine("   INICIANDO VALIDAÇÃO PQC");
             Console.WriteLine("══════════════════════════════════════════════\n");
 
-            // 1️⃣ Extrai assinaturas
-            var extraction = await _metadataExtractor.ExtractSignaturesAsync(pdfContent);
+            // ========================================
+            // 1️⃣ Deserializar assinaturas do Java
+            // ========================================
+            List<JavaSignatureInfo> javaSignatures;
 
-            if (!extraction.HasSignatures)
+            try
             {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    NumberHandling = JsonNumberHandling.AllowReadingFromString
+                };
+
+                javaSignatures = JsonSerializer.Deserialize<List<JavaSignatureInfo>>(
+                    javaSignaturesJson,
+                    options
+                );
+
+                if (javaSignatures == null || javaSignatures.Count == 0)
+                {
+                    Console.WriteLine("❌ Nenhuma assinatura encontrada no JSON");
+                    return new DocumentValidationResult
+                    {
+                        IsValid = false,
+                        Message = "Nenhuma assinatura encontrada no documento.",
+                        SignatureResults = new List<SignatureValidationDetail>(),
+                        TotalSignatures = 0
+                    };
+                }
+
+                Console.WriteLine($"✓ {javaSignatures.Count} assinatura(s) encontrada(s)\n");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Erro ao deserializar JSON: {ex.Message}");
                 return new DocumentValidationResult
                 {
                     IsValid = false,
-                    Message = "Nenhuma assinatura encontrada.",
+                    Message = $"Erro ao processar assinaturas: {ex.Message}",
+                    SignatureResults = new List<SignatureValidationDetail>(),
+                    TotalSignatures = 0
                 };
             }
 
-            Console.WriteLine($"Total: {extraction.Signatures.Count} assinaturas\n");
-
-            var results = new List<SignatureValidationDetail>();
-
-            // ✅ PDF corrente (vai voltando no tempo)
-            byte[] currentPdf = pdfContent;
-
-            // Da última pra primeira
-            var ordered = extraction.Signatures
-                .OrderByDescending(s => s.Order)
+            // ========================================
+            // 2️⃣ Ordenar da última para primeira
+            // ========================================
+            var orderedSignatures = javaSignatures
+                .OrderByDescending(s => s.Number)
                 .ToList();
 
-            foreach (var sig in ordered)
+            Console.WriteLine("📋 Ordem de validação (da mais recente para a mais antiga):");
+            foreach (var sig in orderedSignatures)
+            {
+                Console.WriteLine($"   #{sig.Number}: {sig.Name}");
+            }
+            Console.WriteLine();
+
+            // ========================================
+            // 3️⃣ Validar cada assinatura
+            // ========================================
+            var results = new List<SignatureValidationDetail>();
+
+            foreach (var javaSig in orderedSignatures)
             {
                 Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                Console.WriteLine($"Validando #{sig.Order} — {sig.SignerName}");
+                Console.WriteLine($"📝 Validando assinatura #{javaSig.Number}");
+                Console.WriteLine($"   Signatário: {javaSig.Name}");
+                Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-                var result = await ValidateSingleSignature(sig, currentPdf);
+                var result = await ValidateSingleSignature(javaSig);
 
                 results.Add(result);
 
                 if (!result.IsValid)
                 {
-                    Console.WriteLine($"❌ Falha: {result.ValidationMessage}");
+                    Console.WriteLine($"\n❌ VALIDAÇÃO FALHOU na assinatura #{javaSig.Number}");
+                    Console.WriteLine($"   Motivo: {result.ValidationMessage}");
+                    Console.WriteLine($"   As assinaturas anteriores não serão validadas.");
                     Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
                     break;
                 }
 
-                // Remove XMP
-                currentPdf = await _metadataExtractor.RemoveSignatureMetadataAsync(
-                    currentPdf,
-                    sig.Order
-                );
-
-                // Remove página
-                currentPdf = RemoveSignaturePage(currentPdf, sig.PageNumber);
-
-                Console.WriteLine("✔️ OK\n");
+                Console.WriteLine($"\n✅ Assinatura #{javaSig.Number} VÁLIDA");
+                Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
             }
 
+            // ========================================
+            // 4️⃣ Reverter ordem para exibição
+            // ========================================
             results.Reverse();
 
+            // ========================================
+            // 5️⃣ Gerar resultado final
+            // ========================================
             bool allValid = results.All(r => r.IsValid);
+
+            Console.WriteLine("\n══════════════════════════════════════════════");
+            if (allValid)
+            {
+                Console.WriteLine("   ✅ DOCUMENTO VÁLIDO");
+                Console.WriteLine($"   Total de assinaturas verificadas: {results.Count}");
+            }
+            else
+            {
+                Console.WriteLine("   ❌ DOCUMENTO INVÁLIDO");
+                var invalidCount = results.Count(r => !r.IsValid);
+                Console.WriteLine($"   Assinaturas inválidas: {invalidCount}");
+                Console.WriteLine($"   Assinaturas válidas: {results.Count - invalidCount}");
+            }
+            Console.WriteLine("══════════════════════════════════════════════\n");
 
             return new DocumentValidationResult
             {
                 IsValid = allValid,
                 Message = allValid
-                    ? $"Documento válido ({results.Count})"
-                    : "Documento inválido",
+                    ? $"Documento válido com {results.Count} assinatura(s)"
+                    : "Documento inválido - uma ou mais assinaturas comprometidas",
                 SignatureResults = results,
-                TotalSignatures = extraction.Signatures.Count
+                TotalSignatures = javaSignatures.Count
             };
         }
 
         // ======================================================
         // VALIDA UMA ASSINATURA INDIVIDUAL
         // ======================================================
-
-        private async Task<SignatureValidationDetail> ValidateSingleSignature(
-            ExtractedSignature signature,
-            byte[] pdfAtSignatureMoment)
+        private async Task<SignatureValidationDetail> ValidateSingleSignature(JavaSignatureInfo javaSig)
         {
             try
             {
-                Console.WriteLine($"\n🔍 DEBUG - Assinatura #{signature.Order}");
-                Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                Console.WriteLine($"\n📋 Validando assinatura #{javaSig.Number}");
 
-                // ================================
-                // 1️⃣ Busca documento no banco
-                // ================================
-                Console.WriteLine($"1️⃣ Buscando documento no banco...");
-                Console.WriteLine($"   DocumentId: {signature.DocumentId}");
+                if (!javaSig.ByteRangeValid || javaSig.ByteRange?.Length != 4)
+                    return Invalid(javaSig, "ByteRange inválido");
 
-                var stored = await _repository.GetByDocumentIdAsync(signature.DocumentId);
+                if (string.IsNullOrEmpty(javaSig.SignatureBase64))
+                    return Invalid(javaSig, "Assinatura ausente");
 
-                if (stored == null)
-                {
-                    Console.WriteLine("   ❌ Documento não encontrado!");
-                    return Invalid(signature, "Documento não encontrado no banco.");
-                }
+                if (string.IsNullOrEmpty(javaSig.ToBeSignedBase64))
+                    return Invalid(javaSig, "ToBeSignedBase64 ausente — atualize o serviço Java");
 
-                Console.WriteLine($"   ✓ Documento encontrado");
-                Console.WriteLine($"   - OriginalPath: {stored.OriginalPath}");
-                Console.WriteLine($"   - File exists: {File.Exists(stored.OriginalPath)}");
+                byte[] bytesToVerify = Convert.FromBase64String(javaSig.ToBeSignedBase64);
+                Console.WriteLine($"   Bytes a verificar (ByteRange): {bytesToVerify.Length} bytes");
 
-                // ================================
-                // 2️⃣ Carrega PDF ORIGINAL
-                // ================================
-                Console.WriteLine($"\n2️⃣ Carregando PDF original...");
+                // Extrair assinatura ML-DSA pura do envelope PKCS#7
+                byte[] pkcs7Bytes = Convert.FromBase64String(javaSig.SignatureBase64);
+                //byte[] pkcs7Clean = RemoveZeroPadding(pkcs7Bytes);
+                //Console.WriteLine($"   PKCS#7 limpo: {pkcs7Clean.Length} bytes");
 
-                if (string.IsNullOrEmpty(stored.OriginalPath) || !File.Exists(stored.OriginalPath))
-                {
-                    Console.WriteLine("   ❌ Arquivo não encontrado!");
-                    return Invalid(signature, "PDF original não localizado.");
-                }
+                byte[] signature = ExtractRawSignatureFromPkcs7(pkcs7Bytes);
+                Console.WriteLine($"   Assinatura ML-DSA extraída: {signature.Length} bytes");
 
-                byte[] originalPdf = await File.ReadAllBytesAsync(stored.OriginalPath);
-                Console.WriteLine($"   ✓ PDF carregado: {originalPdf.Length} bytes");
+                // Chave pública
+                if (string.IsNullOrEmpty(javaSig.PublicKeyBase64))
+                    return Invalid(javaSig, "Chave pública ausente");
 
-                // ================================
-                // 3️⃣ Calcula hash do arquivo salvo
-                // ================================
-                Console.WriteLine($"\n3️⃣ Calculando hash do arquivo salvo...");
+                byte[] publicKey = Convert.FromBase64String(javaSig.PublicKeyBase64);
+                Console.WriteLine($"   Chave pública: {publicKey.Length} bytes");
 
-                byte[] realHash = SHA256.HashData(originalPdf);
-                string realHashBase64 = Convert.ToBase64String(realHash);
+                Console.WriteLine("🔐 Verificando assinatura PQC...");
 
-                // ================================
-                // 4️⃣ Normaliza hashes para comparação
-                // ================================
-                string xmpHash = Normalize(signature.DocumentHash);
-                string dbHash = Normalize(stored.OriginalHash);
-                string calcHash = Normalize(realHashBase64);
-
-                Console.WriteLine($"\n4️⃣ Comparando hashes:");
-                Console.WriteLine($"   Hash do XMP:       {xmpHash}");
-                Console.WriteLine($"   Hash Calculado:    {calcHash}");
-                Console.WriteLine($"   Hash do Banco:     {dbHash}");
-                Console.WriteLine($"   XMP == Calc?       {xmpHash == calcHash}");
-                Console.WriteLine($"   Calc == Banco?     {calcHash == dbHash}");
-
-                // ================================
-                // 5️⃣ Confere hash real ↔ banco
-                // ================================
-                Console.WriteLine($"\n5️⃣ Validando hash contra banco...");
-
-                if (calcHash != dbHash)
-                {
-                    Console.WriteLine("   ❌ Hash não confere com o banco!");
-                    Console.WriteLine($"   Esperado (banco): {dbHash}");
-                    Console.WriteLine($"   Calculado:        {calcHash}");
-                    return Invalid(signature, "Hash do PDF original não confere com o banco.");
-                }
-
-                Console.WriteLine("   ✓ Hash confere com o banco");
-
-                // ================================
-                // 6️⃣ Confere hash real ↔ XMP
-                // ================================
-                Console.WriteLine($"\n6️⃣ Validando hash contra XMP...");
-
-                if (calcHash != xmpHash)
-                {
-                    Console.WriteLine("   ❌ Hash não confere com o XMP!");
-                    Console.WriteLine($"   Esperado (XMP): {xmpHash}");
-                    Console.WriteLine($"   Calculado:      {calcHash}");
-                    return Invalid(signature, "Hash do XMP não confere com o documento.");
-                }
-
-                Console.WriteLine("   ✓ Hash confere com o XMP");
-
-                // ================================
-                // 7️⃣ Valida timestamp
-                // ================================
-                Console.WriteLine($"\n7️⃣ Validando timestamp...");
-                Console.WriteLine($"   SignedAt: {signature.SignedAt:yyyy-MM-dd HH:mm:ss}");
-                Console.WriteLine($"   Now:      {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
-
-                if (signature.SignedAt > DateTime.UtcNow.AddMinutes(5))
-                {
-                    Console.WriteLine("   ❌ Timestamp inválido!");
-                    return Invalid(signature, "Timestamp inválido.");
-                }
-
-                Console.WriteLine("   ✓ Timestamp válido");
-
-                // ================================
-                // 8️⃣ Converte hash para bytes
-                // ================================
-                Console.WriteLine($"\n8️⃣ Preparando dados para validação PQC...");
-
-                byte[] hashBytes = Convert.FromBase64String(xmpHash);
-                Console.WriteLine($"   Hash bytes: {hashBytes.Length} bytes");
-
-                // ================================
-                // 9️⃣ ✅ CORREÇÃO: Extrai chave pública como PEM original
-                // stored.ChavePublicaUsada agora é Base64 do PEM completo
-                // ================================
-                Console.WriteLine($"\n9️⃣ Extraindo chave pública (PEM original)...");
-
-                byte[] publicKeyPemBytes = Convert.FromBase64String(stored.ChavePublicaUsada);
-                Console.WriteLine($"   PublicKey PEM: {publicKeyPemBytes.Length} bytes");
-                Console.WriteLine($"   PublicKey PEM preview: {System.Text.Encoding.UTF8.GetString(publicKeyPemBytes).Substring(0, Math.Min(50, publicKeyPemBytes.Length))}...");
-
-                // ================================
-                // 🔟 Converte assinatura
-                // ================================
-                Console.WriteLine($"\n🔟 Convertendo assinatura...");
-
-                byte[] signatureBytes = Convert.FromBase64String(signature.SignatureValue);
-                Console.WriteLine($"   Signature: {signatureBytes.Length} bytes");
-
-                // ================================
-                // 1️⃣1️⃣ ✅ CORREÇÃO: Passa o PEM original diretamente para VerifyAsync
-                // ================================
-                Console.WriteLine($"\n1️⃣1️⃣ Validando assinatura PQC ({signature.Algorithm})...");
-
-                bool valid = await _pqcSigner.VerifyAsync(
-                    hashBytes,
-                    signatureBytes,
-                    publicKeyPemBytes  // ✅ PEM original em bytes, não bytes puros da chave
-                );
-
-                Console.WriteLine($"   Resultado: {(valid ? "✓ VÁLIDA" : "❌ INVÁLIDA")}");
+                // ✅ Verifica: ML-DSA(bytesToVerify) == signature usando publicKey
+                bool valid = await _pqcSigner.VerifyAsync(bytesToVerify, signature, publicKey);
 
                 if (!valid)
                 {
-                    Console.WriteLine("   ❌ Assinatura criptográfica inválida!");
-                    return Invalid(signature, "Assinatura criptográfica inválida.");
+                    Console.WriteLine("❌ Assinatura criptográfica inválida");
+                    return Invalid(javaSig, "Assinatura criptográfica inválida");
                 }
 
-                Console.WriteLine("   ✓ Assinatura PQC válida");
-
-                // ================================
-                // 1️⃣2️⃣ Verifica adulteração XMP
-                // Compara Base64 do PEM: XMP vs banco (ambos agora são PEM original)
-                // ================================
-                Console.WriteLine($"\n1️⃣2️⃣ Verificando integridade do XMP...");
-
-                bool keyTampered = Normalize(signature.PublicKey) != Normalize(stored.ChavePublicaUsada);
-
-                if (keyTampered)
-                {
-                    Console.WriteLine("   ⚠️ Chave pública no XMP foi alterada!");
-                }
-                else
-                {
-                    Console.WriteLine("   ✓ Chave pública íntegra");
-                }
-
-                // ================================
-                // 1️⃣3️⃣ OK
-                // ================================
-                Console.WriteLine($"\n✅ ASSINATURA #{signature.Order} VÁLIDA!");
-                Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                Console.WriteLine("✅ Assinatura criptográfica válida");
 
                 return new SignatureValidationDetail
                 {
-                    SignatureOrder = signature.Order,
-                    SignerName = signature.SignerName,
-                    Algorithm = signature.Algorithm,
-                    SignedAt = signature.SignedAt,
-                    PageNumber = signature.PageNumber,
+                    SignatureOrder = javaSig.Number,
+                    SignerName = javaSig.Name,
+                    Algorithm = "ML-DSA-44",
+                    SignedAt = javaSig.SignDate,
+                    PageNumber = 0,
                     IsValid = true,
-                    ValidationMessage = keyTampered
-                        ? "Assinatura válida, XMP alterado."
-                        : "Assinatura válida."
+                    ValidationMessage = "Assinatura válida"
                 };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n❌ EXCEÇÃO: {ex.Message}");
-                Console.WriteLine($"Stack Trace:\n{ex.StackTrace}");
-                return Invalid(signature, $"Erro interno: {ex.Message}");
+                Console.WriteLine($"❌ Erro interno: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return Invalid(javaSig, $"Erro interno: {ex.Message}");
             }
         }
 
         // ======================================================
-        // REMOVE PÁGINA
+        // EXTRAIR ASSINATURA ML-DSA DO ENVELOPE PKCS#7
         // ======================================================
-
-        private byte[] RemoveSignaturePage(byte[] pdf, int page)
+        // ======================================================
+        // EXTRAIR ASSINATURA ML-DSA DO /Contents
+        // ======================================================
+        private byte[] ExtractRawSignatureFromPkcs7(byte[] contentsBytes)
         {
-            using var input = new MemoryStream(pdf);
-            using var output = new MemoryStream();
+            // O /Contents agora contém a assinatura ML-DSA pura (não PKCS#7).
+            // O PDFBox retorna os bytes do campo hex como bytes brutos,
+            // mas pode vir com zero-padding ao final — remover.
 
-            using var reader = new PdfReader(input);
-            using var writer = new PdfWriter(output);
-            using var doc = new PdfDocument(reader, writer);
+            Console.WriteLine($"   /Contents recebido: {contentsBytes.Length} bytes");
 
-            doc.RemovePage(page);
-            doc.Close();
+            // Remove zero-padding do PDFBox
+            int actualLength = contentsBytes.Length;
+            for (int i = contentsBytes.Length - 1; i >= 0; i--)
+            {
+                if (contentsBytes[i] != 0x00) { actualLength = i + 1; break; }
+            }
 
-            return PdfCleanupHelper.StabilizePdf(output.ToArray());
+            var clean = new byte[actualLength];
+            Array.Copy(contentsBytes, 0, clean, 0, actualLength);
+
+            Console.WriteLine($"   Assinatura após remover padding: {clean.Length} bytes");
+
+            // Validar tamanho esperado para ML-DSA
+            // ML-DSA-44 = 2420, ML-DSA-65 = 3309, ML-DSA-87 = 4627
+            int[] expectedSizes = { 2420, 3309, 4627 };
+            bool sizeOk = expectedSizes.Contains(clean.Length);
+            Console.WriteLine($"   Tamanho válido para ML-DSA: {sizeOk} ({clean.Length} bytes)");
+
+            return clean;
         }
 
         // ======================================================
         // HELPERS
         // ======================================================
-
-        private string Normalize(string s)
-        {
-            if (string.IsNullOrEmpty(s))
-                return "";
-
-            return s
-                .Replace(" ", "")
-                .Replace("\n", "")
-                .Replace("\r", "")
-                .Replace("\t", "")
-                .Trim();
-        }
-
-        private SignatureValidationDetail Invalid(
-            ExtractedSignature sig,
-            string msg)
+        private SignatureValidationDetail Invalid(JavaSignatureInfo sig, string msg)
         {
             return new SignatureValidationDetail
             {
-                SignatureOrder = sig.Order,
-                SignerName = sig.SignerName,
-                Algorithm = sig.Algorithm,
-                SignedAt = sig.SignedAt,
-                PageNumber = sig.PageNumber,
+                SignatureOrder = sig.Number,
+                SignerName = sig.Name ?? "Desconhecido",
+                Algorithm = "ML-DSA-44",
+                SignedAt = sig.SignDate,
+                PageNumber = 0,
                 IsValid = false,
                 ValidationMessage = msg
             };
@@ -357,9 +269,41 @@ namespace PQC.MODULES.Documents.Application.UseCases.Validation
     }
 
     // ======================================================
+    // MODELS PARA DESERIALIZAR JSON DO JAVA
+    // ======================================================
+    public class JavaSignatureInfo
+    {
+        [JsonPropertyName("index")]
+        public int Number { get; set; }
+
+        public string Name { get; set; }
+        public string Reason { get; set; }
+        public string Location { get; set; }
+
+        [JsonPropertyName("signDate")]
+        public DateTime? SignDateObj { get; set; }
+
+        [JsonIgnore]
+        public DateTime SignDate => SignDateObj ?? DateTime.MinValue;
+
+        public string Filter { get; set; }
+        public string SubFilter { get; set; }
+        public string PublicKeyBase64 { get; set; }
+        public string SignatureBase64 { get; set; }
+        public int SignatureSize { get; set; }
+
+        public int[] ByteRange { get; set; }
+        public bool ByteRangeValid { get; set; }
+        public string ByteRangeHashBase64 { get; set; }
+        public string ByteRangeHashHex { get; set; }
+
+        // ✅ NOVO: bytes exatos que o ML-DSA assinou (ByteRange content sem /Contents)
+        public string ToBeSignedBase64 { get; set; }
+    }
+
+    // ======================================================
     // RESULT MODELS
     // ======================================================
-
     public class DocumentValidationResult
     {
         public bool IsValid { get; set; }

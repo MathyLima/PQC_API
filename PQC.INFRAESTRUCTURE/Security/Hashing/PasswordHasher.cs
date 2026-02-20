@@ -5,7 +5,8 @@ namespace PQC.INFRAESTRUCTURE.Security.Hashing
 {
     public class BcryptPasswordHasher : IPasswordHasher
     {
-        private const int WorkFactor = 12; // ajuste conforme segurança desejada
+        
+        private const int WorkFactor = 10; 
 
         public string HashPassword(string password)
         {

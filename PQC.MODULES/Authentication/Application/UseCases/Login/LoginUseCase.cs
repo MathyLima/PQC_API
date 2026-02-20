@@ -10,6 +10,7 @@ namespace PQC.MODULES.Authentication.Application.UseCases.Login
         private readonly Token _jwtService;
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
+
         public LoginUseCase(IUserRepository userRepository, Token jwtService, IPasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
@@ -25,9 +26,10 @@ namespace PQC.MODULES.Authentication.Application.UseCases.Login
 
             if (user == null)
             {
-                throw new ErrorOnValidationException( "Login ou senha incorretos" );
+                throw new ErrorOnValidationException("Login ou senha incorretos");
             }
 
+            // ✅ Verificar senha (agora ~100-150ms com WorkFactor 10)
             bool isPasswordValid = _passwordHasher.VerifyPassword(request.Password, user.Senha);
 
             if (!isPasswordValid)
@@ -35,15 +37,25 @@ namespace PQC.MODULES.Authentication.Application.UseCases.Login
                 throw new ErrorOnValidationException("Login ou senha incorretos");
             }
 
-            // Rehash da senha se necessário (após aumentar o WorkFactor)
             if (_passwordHasher.NeedsRehash(user.Senha))
             {
-                user.Senha = _passwordHasher.HashPassword(request.Password);
-                await _userRepository.UpdateAsync(user);
-                await _userRepository.SaveChangesAsync();
+                // Fire-and-forget: não await
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        user.Senha = _passwordHasher.HashPassword(request.Password);
+                        await _userRepository.UpdateAsync(user);
+                        await _userRepository.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log do erro, mas não quebra o login
+                        // _logger.LogError(ex, "Erro ao fazer rehash da senha do usuário {UserId}", user.Id);
+                    }
+                });
             }
 
-            // CORREÇÃO: usar _jwtService ao invés de _tokenGenerator
             var token = _jwtService.GenerateToken(user);
 
             return new LoginResponseJson

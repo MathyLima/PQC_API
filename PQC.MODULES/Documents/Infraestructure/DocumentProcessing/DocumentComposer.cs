@@ -29,7 +29,7 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
             using var pdfWriter = new PdfWriter(outputMs);
             using var pdfDoc = new PdfDocument(pdfWriter);
 
-            // ✅ Extrai XMP customizado ANTES de copiar páginas
+            // Extrai XMP customizado ANTES de copiar páginas
             string existingXmp = string.Empty;
             using (var currentMs = new MemoryStream(currentPdf))
             using (var currentReader = new PdfReader(currentMs))
@@ -39,11 +39,11 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
                 existingXmp = CustomXmpHandler.ExtractCustomXmp(currentDoc);
                 if (!string.IsNullOrEmpty(existingXmp))
                 {
-                    Console.WriteLine($"📝 AddMetadataPage: XMP customizado extraído do original ({existingXmp.Length} chars)");
+                    Console.WriteLine($" AddMetadataPage: XMP customizado extraído do original ({existingXmp.Length} chars)");
                 }
                 else
                 {
-                    Console.WriteLine("📝 AddMetadataPage: Sem XMP customizado no original");
+                    Console.WriteLine(" AddMetadataPage: Sem XMP customizado no original");
                 }
 
                 // Copia páginas do original
@@ -58,11 +58,11 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
                 metadataDoc.CopyPagesTo(1, metadataDoc.GetNumberOfPages(), pdfDoc);
             }
 
-            // ✅ Re-injeta o XMP customizado no novo PDF (se existia)
+            // Re-injeta o XMP customizado no novo PDF (se existia)
             if (!string.IsNullOrEmpty(existingXmp))
             {
                 CustomXmpHandler.InjectCustomXmp(pdfDoc, existingXmp);
-                Console.WriteLine("📝 AddMetadataPage: XMP customizado re-injetado no novo PDF");
+                Console.WriteLine(" AddMetadataPage: XMP customizado re-injetado no novo PDF");
             }
 
             pdfDoc.Close();
@@ -107,16 +107,6 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
             pdfDoc.Close();
 
             return outputMs.ToArray();
-        }
-
-        [Obsolete("Use AddMetadataPageAsync + AddXmpSignatureAsync")]
-        public async Task<byte[]> ComposeForSignatureAsync(
-            byte[] originalPdf,
-            SignatureMetadata metadata)
-        {
-            var metaPage = await _generator.GenerateMetaDataPageAsync(metadata);
-            var finalPdf = await _merger.MergeAsync(originalPdf, metaPage, metadata);
-            return finalPdf;
         }
 
         /// <summary>

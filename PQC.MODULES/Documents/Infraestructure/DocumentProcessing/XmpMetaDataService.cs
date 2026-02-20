@@ -79,33 +79,29 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
             Console.WriteLine($"📝 XMP: Criando inicial com order=1, documentId={metadata.DocumentId}");
 
             return $@"<?xpacket begin='ï»¿' id='W5M0MpCehiHzreSzNTczkc9d'?>
-<x:xmpmeta xmlns:x='adobe:ns:meta/'>
-<rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>
-<rdf:Description rdf:about=''
-xmlns:dc='http://purl.org/dc/elements/1.1/'
-xmlns:pqc='http://pqc.com/signature/1.0/'>
-
-<pqc:signatures>
-<rdf:Bag>
-
-<rdf:li rdf:parseType='Resource'>
-<pqc:order>1</pqc:order>
-<pqc:documentId>{metadata.DocumentId}</pqc:documentId>
-<dc:creator>{metadata.SignerName}</dc:creator>
-<dc:date>{metadata.SignedAt:O}</dc:date>
-<pqc:algorithm>{metadata.Algorithm}</pqc:algorithm>
-<pqc:documentHash>{metadata.DocumentHash}</pqc:documentHash>
-<pqc:signatureValue>{signature}</pqc:signatureValue>
-<pqc:publicKey>{metadata.PublicKey}</pqc:publicKey>
-</rdf:li>
-
-</rdf:Bag>
-</pqc:signatures>
-
-</rdf:Description>
-</rdf:RDF>
-</x:xmpmeta>
-<?xpacket end='w'?>";
+                        <x:xmpmeta xmlns:x='adobe:ns:meta/'>
+                          <rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>
+                            <rdf:Description rdf:about=''
+                                xmlns:dc='http://purl.org/dc/elements/1.1/'
+                                xmlns:pqc='http://pqc.com/signature/1.0/'>
+                                <pqc:signatures>
+                                    <rdf:Bag>
+                                        <rdf:li rdf:parseType='Resource'>
+                                        <pqc:order>1</pqc:order>
+                                        <pqc:documentId>{metadata.DocumentId}</pqc:documentId>
+                                        <dc:creator>{metadata.SignerName}</dc:creator>
+                                        <dc:date>{metadata.SignedAt:O}</dc:date>
+                                        <pqc:algorithm>{metadata.Algorithm}</pqc:algorithm>
+                                        <pqc:documentHash>{metadata.DocumentHash}</pqc:documentHash>
+                                        <pqc:signatureValue>{signature}</pqc:signatureValue>
+                                        <pqc:publicKey>{metadata.PublicKey}</pqc:publicKey>
+                                        </rdf:li>
+                                    </rdf:Bag>
+                                </pqc:signatures>
+                            </rdf:Description>
+                      </rdf:RDF>
+                    </x:xmpmeta>
+                <?xpacket end='w'?>";
         }
 
         private string AppendSignature(
@@ -179,8 +175,8 @@ xmlns:pqc='http://pqc.com/signature/1.0/'>
         private string WrapWithXPackets(string xmp)
         {
             return $@"<?xpacket begin='ï»¿' id='W5M0MpCehiHzreSzNTczkc9d'?>
-{xmp}
-<?xpacket end='w'?>";
+                             {xmp}
+                    <?xpacket end='w'?>";
         }
     }
 }

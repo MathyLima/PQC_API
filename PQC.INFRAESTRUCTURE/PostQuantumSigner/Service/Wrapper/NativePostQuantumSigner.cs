@@ -78,6 +78,12 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
         /// </summary>
         public async Task<bool> VerifyAsync(byte[] data, byte[] signature, byte[] publicKey)
         {
+
+            // ✅ LOGS DE DIAGNÓSTICO
+            Console.WriteLine($"   data (hash) length: {data.Length} bytes");
+            Console.WriteLine($"   data (hash) Base64: {Convert.ToBase64String(data)}");
+            Console.WriteLine($"   signature length: {signature.Length} bytes");
+            Console.WriteLine($"   signature Base64 (primeiros 40): {Convert.ToBase64String(signature).Substring(0, 40)}...");
             var tempPrefix = Path.Combine(
                 BASE_TEMP_DIR,
                 TEMP_SIGN_DIR,
@@ -89,13 +95,10 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
 
             try
             {
-                // ✅ CORREÇÃO: publicKey já é o PEM original em bytes
-                // Não precisa detectar algoritmo nem reconstruir PEM
                 var pemPublicKey = Encoding.UTF8.GetString(publicKey);
                 Console.WriteLine($"🔍 Using PEM public key directly from storage");
                 Console.WriteLine($"   PEM preview: {pemPublicKey.Substring(0, Math.Min(60, pemPublicKey.Length))}...");
 
-                // 🔥 RECONSTRUIR O ARQUIVO .sig NO FORMATO ESPERADO PELA CLI
                 // Detecta algoritmo a partir do PEM para montar o .sig
                 var algorithm = DetectAlgorithmFromPem(pemPublicKey);
                 Console.WriteLine($"   Algorithm detected from PEM: {algorithm}");
@@ -105,8 +108,9 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
                 // Salva dados, assinatura e chave pública (PEM original diretamente)
                 var fullDataPath = await _fileStorage.SaveAsync(dataPath, data);
                 var fullSigPath = await _fileStorage.SaveAsync(sigPath, signatureFileContent);
-                // ✅ CORREÇÃO: salva o PEM original como está, sem reconstruir
+
                 var fullKeyPath = await _fileStorage.SaveAsync(keyPath, publicKey);
+
 
                 Console.WriteLine($"🔍 Verifying with:");
                 Console.WriteLine($"   Data: {data.Length} bytes");
@@ -120,11 +124,11 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
 
                 if (exitCode == 0)
                 {
-                    Console.WriteLine("✅ CLI verification PASSED");
+                    Console.WriteLine("CLI verification PASSED");
                 }
                 else
                 {
-                    Console.WriteLine($"❌ CLI verification FAILED");
+                    Console.WriteLine($"CLI verification FAILED");
                     Console.WriteLine($"   stdout: {stdout}");
                     Console.WriteLine($"   stderr: {stderr}");
                 }
@@ -145,7 +149,7 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
                 $"key_{Guid.NewGuid()}"
             );
             var publicKeyPath = $"{tempPrefix}.pub";
-            var privateKeyPath = $"{tempPrefix}.key";
+            var privateKeyPath = $"{tempPrefix}.priv";
 
             try
             {
@@ -277,12 +281,7 @@ namespace PQC.INFRAESTRUCTURE.PostQuantumSigner.Service.Wrapper
         {
             var base64Signature = Convert.ToBase64String(signatureBytes);
 
-            var content = $@"[ALGORITHM]
-{algorithm}
-
-[SIGNATURE]
-{base64Signature}
-";
+            var content = $"[ALGORITHM]\n{algorithm}\n\n[SIGNATURE]\n{base64Signature}\n";
 
             Console.WriteLine($"📝 Creating .sig file:");
             Console.WriteLine($"   Algorithm: {algorithm}");

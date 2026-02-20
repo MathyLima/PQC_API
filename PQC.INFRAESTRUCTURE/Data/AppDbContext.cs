@@ -82,6 +82,40 @@ namespace PQC.INFRAESTRUCTURE.Data
                     .HasMaxLength(50)
                     .HasConversion<string>()
                     .IsRequired();
+                // Endereço
+
+                entity.Property(e => e.Cep)
+                    .HasColumnName("cep")
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.Logradouro)
+                    .HasColumnName("logradouro")
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.Numero)
+                    .HasColumnName("numero")
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Complemento)
+                    .HasColumnName("complemento")
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.Bairro)
+                    .HasColumnName("bairro")
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Cidade)
+                    .HasColumnName("cidade")
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Estado)
+                    .HasColumnName("estado")
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Pais)
+                    .HasColumnName("pais")
+                    .HasMaxLength(50);
+
 
                 // Índices
                 entity.HasIndex(e => e.Cpf).IsUnique();

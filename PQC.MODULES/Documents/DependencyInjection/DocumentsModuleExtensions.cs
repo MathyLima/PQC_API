@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using PdfSharp.Fonts;
 using PQC.MODULES.Documents.Application.Interfaces.PDFcomposer;
+using PQC.MODULES.Documents.Application.UseCases;
 using PQC.MODULES.Documents.Application.UseCases.List;
 using PQC.MODULES.Documents.Application.UseCases.Sign;
 using PQC.MODULES.Documents.Application.UseCases.Validation; 
@@ -18,6 +19,7 @@ namespace PQC.MODULES.Documents.DependencyInjection
             services.AddScoped<SignDocumentUseCase>();
             services.AddScoped<ListDocumentsByUserIdUseCase>();
             services.AddScoped<ValidateDocumentUseCase>();
+            services.AddScoped<SaveDocumentUseCase>();
 
             if (GlobalFontSettings.FontResolver == null)
             {
@@ -29,7 +31,7 @@ namespace PQC.MODULES.Documents.DependencyInjection
             services.AddScoped<ISignatureMetadataPageGenerator, PdfMetadataPageGenerator>();
             services.AddScoped<IDocumentMerger, PdfDocumentMerger>();
             services.AddScoped<IXmpMetaDataService, XmpMetadataService>();
-            services.AddScoped<IXmpMetadataExtractor, XmpMetadataExtractor>(); // 🆕 ADICIONAR
+            services.AddScoped<IXmpMetadataExtractor, XmpMetadataExtractor>();
 
             return services;
         }

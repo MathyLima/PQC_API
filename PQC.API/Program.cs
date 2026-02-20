@@ -21,6 +21,12 @@ builder.Services.AddSharedInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+builder.Services.AddHttpClient("PdfService", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:8080"); // endereço do outro serviço
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
+
 // ========== 3️⃣ MÓDULOS ==========
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
@@ -29,6 +35,24 @@ builder.Services.AddDocumentsModule();
 // ========== 4️⃣ CONTROLLERS E FILTROS ==========
 builder.Services.AddControllers();
 builder.Services.AddMvc(options => options.Filters.Add<ExceptionFilter>());
+
+// ========== 🆕 CORS - ADICIONE AQUI ==========
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:5500",
+            "http://127.0.0.1:5500",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:5173"  // Caso use Vite
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
+});
 
 // ========== 5️⃣ SWAGGER COM JWT ==========
 builder.Services.AddEndpointsApiExplorer();
@@ -45,6 +69,7 @@ builder.Services.AddSwaggerGen(c =>
 
     c.OperationFilter<SecurityRequirementsOperationFilter>();
 });
+
 // ========== 6️⃣ JWT AUTHENTICATION COM DEBUG ==========
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["SecretKey"]
@@ -155,6 +180,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// ========== 🆕 USE CORS - ADICIONE ANTES DE UseHttpsRedirection ==========
+app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

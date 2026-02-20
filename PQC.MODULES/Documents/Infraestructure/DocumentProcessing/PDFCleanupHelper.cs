@@ -21,7 +21,6 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
 
             // ✅ WriterProperties para minimizar mudanças
             var writerProps = new WriterProperties();
-            // Substitua PdfOutputStream.MAXIMUM_COMPRESSION por o valor inteiro padrão do iText7 para compressão máxima.
             // O valor geralmente utilizado é 9 (nível máximo de compressão do zlib/deflate).
             writerProps.SetCompressionLevel(9);
 
@@ -48,7 +47,7 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
             var info = pdfDoc.GetDocumentInfo();
 
             // Remover campos que mudam toda vez
-            // O método GetPdfObject() é interno, então use reflection para acessar o PdfDictionary
+            // O método GetPdfObject() é interno, utilizar reflection para acessar o PdfDictionary
             var infoDictProperty = typeof(PdfDocumentInfo).GetProperty("PdfObject", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var infoDict = infoDictProperty?.GetValue(info) as PdfDictionary;
 

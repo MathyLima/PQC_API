@@ -105,23 +105,7 @@ namespace PQC.MODULES.Documents.Infraestructure.DocumentProcessing
             pdfDoc.Close();
             return PdfCleanupHelper.StabilizePdf(outputMs.ToArray());
         }
-        private string GetXmpMetadata(PdfDocument doc)
-        {
-            try
-            {
-                byte[] xmpBytes = doc.GetXmpMetadata();
-                if (xmpBytes != null && xmpBytes.Length > 0)
-                {
-                    return Encoding.UTF8.GetString(xmpBytes);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Erro ao extrair XMP: {ex.Message}");
-            }
-
-            return string.Empty;
-        }
+      
 
         private string RemoveXPackets(string xmp)
         {
