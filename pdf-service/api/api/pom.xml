@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.2.1</version>
+		<relativePath/>
+	</parent>
+
+	<groupId>com.pdfController</groupId>
+	<artifactId>api</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>api</name>
+	<description>API Spring Boot para manipulação e assinatura de PDF com DSS + PDFBox</description>
+
+	<properties>
+		<java.version>17</java.version>
+		<!--
+            DSS 6.x  =  jakarta.*  = compatível com Spring Boot 3.x
+            DSS 5.x  =  javax.*    = compatível com Spring Boot 2.x
+            Última estável no Maven Central: 6.2
+        -->
+		<dss.version>6.2</dss.version>
+		<!--
+            PDFBox usado pelo DSS 6.2 internamente é o 3.0.5.
+            Forçar aqui evita que o Maven rebaixe para 2.x via conflito transitivo.
+        -->
+		<pdfbox.version>3.0.5</pdfbox.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Ancora PDFBox 3.x no classpath inteiro -->
+			<dependency>
+				<groupId>org.apache.pdfbox</groupId>
+				<artifactId>pdfbox</artifactId>
+				<version>${pdfbox.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.pdfbox</groupId>
+				<artifactId>fontbox</artifactId>
+				<version>${pdfbox.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+
+		<!-- Spring Boot Web -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Validação -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- DSS: lógica PAdES -->
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-pades</artifactId>
+			<version>${dss.version}</version>
+		</dependency>
+
+		<!-- DSS: engine PDF PDFBox 3.x -->
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-pades-pdfbox</artifactId>
+			<version>${dss.version}</version>
+		</dependency>
+
+		<!-- DSS: validação de assinaturas -->
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-validation</artifactId>
+			<version>${dss.version}</version>
+		</dependency>
+
+		<!-- DSS: cliente HTTP para TSA / OCSP -->
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-service</artifactId>
+			<version>${dss.version}</version>
+		</dependency>
+
+		<!-- DSS: utilitários obrigatórios — sem isso o DSS lança ExceptionInInitializerError -->
+		<!-- Escolher UM entre apache-commons (recomendado) ou google-guava -->
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-utils-apache-commons</artifactId>
+			<version>${dss.version}</version>
+		</dependency>
+
+		<!-- PDFBox 3.x — uso direto para página de metadados
+             (versão gerenciada pelo dependencyManagement acima) -->
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+		</dependency>
+
+		<!-- Testes -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

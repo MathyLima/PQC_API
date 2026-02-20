@@ -21,3 +21,21 @@ appsettings.Local.json
 # OS
 .DS_Store
 Thumbs.db
+
+
+# C#
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Java
+target/
+*.class
+.gradle/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
